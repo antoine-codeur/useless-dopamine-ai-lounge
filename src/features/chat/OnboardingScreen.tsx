@@ -5,7 +5,7 @@ import { Button } from "../../components/Button/Button";
 import { AccountAvatar } from "../account/AccountAvatar";
 import { AvatarModal } from "../onboarding/AvatarModal";
 import { isHandle } from "../auth/validation";
-import type { AvatarEditorState } from "./ChatPage";
+import type { AvatarEditorState } from "./useAvatarEditor";
 
 type OnboardingScreenProps = {
   account: Account;

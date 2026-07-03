@@ -75,8 +75,8 @@ import { OnboardingScreen } from "./OnboardingScreen";
 import { ProfileSettings } from "./ProfileSettings";
 import { AccountMenu } from "./AccountMenu";
 import { Sidebar } from "./Sidebar";
+import { useAvatarEditor } from "./useAvatarEditor";
 import { AvatarModal } from "../onboarding/AvatarModal";
-import { cropAvatar } from "../../lib/avatar";
 import { isoNow } from "../../lib/date";
 import { FloatingTooltip } from "../../components/FloatingTooltip/FloatingTooltip";
 import type { TooltipAnchor } from "../../components/FloatingTooltip/FloatingTooltip";
@@ -89,11 +89,6 @@ import { ShopPanel } from "../shop/ShopPanel";
 import { nextBoosterFloor } from "../shop/shop.store";
 import { useDismiss } from "../../lib/useDismiss";
 import "./ChatPage.css";
-
-export type AvatarEditorState = {
-  src: string;
-  nextStep?: Account["onboardingStep"];
-};
 
 const composerDictionary = [
   "accessibility",
@@ -145,8 +140,7 @@ export function ChatPage() {
   const [profileHandle, setProfileHandle] = useState("");
   const [profileBirthDate, setProfileBirthDate] = useState("");
   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "" });
-  const [avatarEditor, setAvatarEditor] = useState<AvatarEditorState | null>(null);
-  const [avatarScale, setAvatarScale] = useState(1);
+  const { avatarEditor, avatarScale, setAvatarScale, openAvatarImageFile, openAvatarFile, closeAvatarEditor, saveAvatar } = useAvatarEditor();
   const [suggestionIndex, setSuggestionIndex] = useState(0);
   const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
   const [threadMenuId, setThreadMenuId] = useState<string | null>(null);
@@ -359,26 +353,6 @@ export function ChatPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!avatarEditor) {
-      return;
-    }
-
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        closeAvatarEditor();
-      }
-
-      if (event.key === "Enter") {
-        event.preventDefault();
-        void saveAvatar();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [avatarEditor, avatarScale]);
 
   useEffect(() => {
     if (!showAuthModal) {
@@ -1566,29 +1540,6 @@ export function ChatPage() {
     setView("chat");
   }
 
-  function openAvatarImageFile(file: File | undefined, nextStep?: Account["onboardingStep"]) {
-    if (!file) {
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      setActionMessage("Choose an image file.");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setAvatarScale(1);
-      setAvatarEditor({ src: String(reader.result), nextStep });
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function openAvatarFile(event: ChangeEvent<HTMLInputElement>, nextStep?: Account["onboardingStep"]) {
-    const file = event.currentTarget.files?.[0];
-    event.currentTarget.value = "";
-    openAvatarImageFile(file, nextStep);
-  }
 
   function handleProfileDragOver(event: ReactDragEvent<HTMLElement>) {
     if (!account || !Array.from(event.dataTransfer.items).some((item) => item.type.startsWith("image/"))) {
@@ -1665,32 +1616,6 @@ export function ChatPage() {
     accountHoverTimer.current = window.setTimeout(() => setShowAccountMenu(false), 220);
   }
 
-  function closeAvatarEditor() {
-    setAvatarEditor(null);
-    setAvatarScale(1);
-  }
-
-  async function saveAvatar() {
-    if (!avatarEditor) {
-      return;
-    }
-
-    const avatarDataUrl = await cropAvatar(avatarEditor.src, avatarScale);
-    const result = await updateAccount({
-      avatarDataUrl,
-      ...(avatarEditor.nextStep ? { onboardingStep: avatarEditor.nextStep } : {}),
-    });
-
-    if (!result.ok) {
-      setActionMessage("Avatar could not be saved.");
-      return;
-    }
-
-    applyAccountResult(result);
-    closeAvatarEditor();
-    bumpQuest("avatar-set");
-    showToast({ variant: "success", title: "Avatar saved" });
-  }
 
   function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Escape" && editTargetId) {
