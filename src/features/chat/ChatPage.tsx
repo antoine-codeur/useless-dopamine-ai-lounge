@@ -66,7 +66,7 @@ import { addSeasonXp } from "../season/season.store";
 import { SeasonPanel } from "../season/SeasonPanel";
 import { RankingPanel } from "../ranking/RankingPanel";
 import { useSpeechToText } from "./useSpeechToText";
-import { useAccountStore } from "../profile/account.store";
+import { applyAccountResult, useAccountStore } from "../profile/account.store";
 import { isEmail, isHandle, isStrongPassword, isValidOptionalBirthDate } from "../auth/validation";
 import { PasswordChecklist } from "../auth/PasswordChecklist";
 import { AccountAvatar } from "../account/AccountAvatar";
@@ -297,7 +297,7 @@ export function ChatPage() {
           return;
         }
 
-        setAccount(result.account, result.plans, result.quests);
+        applyAccountResult(result);
       } else {
         loadGuestSession().then((guestResult) => {
           if (guestResult.ok && guestResult.guest) {
@@ -914,7 +914,7 @@ export function ChatPage() {
 
     if (!result.ok) {
       if ("account" in result && result.error === "credit_limit" && result.account) {
-        setAccount(result.account, result.plans, result.quests);
+        applyAccountResult(result);
         setLimitReached(true);
         setView("plans");
       }
@@ -928,7 +928,7 @@ export function ChatPage() {
     }
 
     if ("account" in result) {
-      setAccount(result.account, result.plans, result.quests);
+      applyAccountResult(result);
     } else {
       setGuest(result.guest);
       setPlans(result.plans);
@@ -1077,6 +1077,8 @@ export function ChatPage() {
         }
 
         if (result.account && result.quests) {
+          // Narrowed here (steps-refund returns account OR guest), so the
+          // explicit call is needed — the result object type stays optional.
           setAccount(result.account, result.plans, result.quests);
         } else if (result.guest) {
           setGuest(result.guest);
@@ -1342,7 +1344,7 @@ export function ChatPage() {
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     setShowAuthModal(false);
   }
 
@@ -1366,7 +1368,7 @@ export function ChatPage() {
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     setShowAuthModal(false);
   }
 
@@ -1385,7 +1387,7 @@ export function ChatPage() {
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     setActionMessage("");
   }
 
@@ -1394,7 +1396,7 @@ export function ChatPage() {
     const result = await updateAccount({ onboardingStep: step });
 
     if (result.ok) {
-      setAccount(result.account, result.plans, result.quests);
+      applyAccountResult(result);
     }
   }
 
@@ -1413,7 +1415,7 @@ export function ChatPage() {
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     setActionMessage("");
 
     if (profileBirthDate) {
@@ -1434,7 +1436,7 @@ export function ChatPage() {
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     setActionMessage("");
     bumpQuest("profile-saves");
     bumpQuest("handle-set");
@@ -1450,7 +1452,7 @@ export function ChatPage() {
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     setPasswordForm({ currentPassword: "", newPassword: "" });
     setActionMessage("");
     bumpQuest("password-changed");
@@ -1474,14 +1476,14 @@ export function ChatPage() {
         recordCredit(-upgradeCost, `Plan: ${plans.find((plan) => plan.id === planId)?.label ?? planId}`, "plan");
       }
 
-      setAccount(result.account, result.plans, result.quests);
+      applyAccountResult(result);
       setLimitReached(false);
       setView("chat");
       return;
     }
 
     if (result.error === "upgrade_credit_limit" && result.account) {
-      setAccount(result.account, result.plans, result.quests);
+      applyAccountResult(result);
       setLimitReached(true);
     }
   }
@@ -1494,7 +1496,7 @@ export function ChatPage() {
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     bumpQuest("dailies");
     bumpQuest("credits-earned", result.rewardCredits);
     recordCredit(result.rewardCredits, `Quest: ${result.quests.find((quest) => quest.id === questId)?.label ?? questId}`, "quest");
@@ -1511,7 +1513,7 @@ export function ChatPage() {
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     bumpQuest("boosters");
     bumpQuest("credits-earned", result.rewardCredits);
     recordCredit(result.rewardCredits, "Booster opening", "booster");
@@ -1530,7 +1532,7 @@ export function ChatPage() {
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     bumpQuest("credits-earned", result.rewardCredits);
     recordCredit(result.rewardCredits, "Birthday gift", "gift");
     creditGain(result.rewardCredits);
@@ -1703,7 +1705,7 @@ export function ChatPage() {
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     closeAvatarEditor();
     bumpQuest("avatar-set");
     showToast({ variant: "success", title: "Avatar saved" });

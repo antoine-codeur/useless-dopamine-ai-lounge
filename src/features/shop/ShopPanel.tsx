@@ -4,7 +4,7 @@ import { Check, CreditCard, Gift, ListPlus, Package, PackageOpen, Palette, Paper
 import { Button } from "../../components/Button/Button";
 import { showToast } from "../../components/Toast/toast.store";
 import { GuestPanel } from "../account/GuestPanel";
-import { useAccountStore } from "../profile/account.store";
+import { applyAccountResult, useAccountStore } from "../profile/account.store";
 import { useUserStore } from "../profile/profile.store";
 import { buyBoosters as buyBoostersApi, claimDailyBooster as claimDailyBoosterApi, openBooster } from "../../lib/api";
 import { openBoosterPuzzle } from "../rewards/puzzle.store";
@@ -178,7 +178,7 @@ export function ShopPanel({ onCreateAccount, onLogin }: { onCreateAccount: () =>
 
     if (!result?.ok) {
       if (result?.account) {
-        setAccount(result.account, result.plans, result.quests);
+        applyAccountResult(result);
       }
 
       const remaining = useAccountStore.getState().account?.creditsRemaining ?? 0;
@@ -190,7 +190,7 @@ export function ShopPanel({ onCreateAccount, onLogin }: { onCreateAccount: () =>
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     bumpQuest("credits-spent", result.price);
     bumpQuest("booster-buys", count);
     recordCredit(-result.price, `Bought ${count} booster${count > 1 ? "s" : ""}`, "purchase");
@@ -232,7 +232,7 @@ export function ShopPanel({ onCreateAccount, onLogin }: { onCreateAccount: () =>
       return;
     }
 
-    setAccount(last.account, last.plans, last.quests);
+    applyAccountResult(last);
     const totalBase = bases.reduce((sum, base) => sum + base, 0);
     bumpQuest("boosters", bases.length);
     bumpQuest("credits-earned", totalBase);
@@ -253,14 +253,14 @@ export function ShopPanel({ onCreateAccount, onLogin }: { onCreateAccount: () =>
 
     if (!result?.ok) {
       if (result?.account) {
-        setAccount(result.account, result.plans, result.quests);
+        applyAccountResult(result);
       }
 
       showToast({ variant: "info", title: "Already claimed today", description: "Your next booster unlocks tomorrow." });
       return;
     }
 
-    setAccount(result.account, result.plans, result.quests);
+    applyAccountResult(result);
     useQuestStore.getState().claimDailyBooster();
     bumpQuest("daily-booster");
     showToast({ variant: "success", title: "Booster added", description: "Open it right here — tap fast for a higher rarity." });

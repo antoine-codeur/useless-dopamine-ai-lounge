@@ -26,3 +26,12 @@ export const useAccountStore = create<AccountStore>((set) => ({
     set({ account: null });
   },
 }));
+
+/**
+ * Apply an API result ({ account, plans, quests }) to the store in one call.
+ * Factors out the `setAccount(result.account, result.plans, result.quests)`
+ * that every mutation handler was repeating (30+ sites).
+ */
+export function applyAccountResult(result: { account: Account; plans: Plan[]; quests: Quest[] }): void {
+  useAccountStore.getState().setAccount(result.account, result.plans, result.quests);
+}

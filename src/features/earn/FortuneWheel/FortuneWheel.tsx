@@ -3,7 +3,7 @@ import { useReducedMotion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
 import type { Account } from "../../../types";
 import { spinWheel, type WheelReward } from "../../../lib/api";
-import { useAccountStore } from "../../profile/account.store";
+import { applyAccountResult } from "../../profile/account.store";
 import { addSeasonXp } from "../../season/season.store";
 import { celebrate } from "../../rewards/reward.store";
 import { showToast } from "../../../components/Toast/toast.store";
@@ -28,7 +28,6 @@ function slicePath(index: number) {
  *  can spin as a teaser but are nudged to sign in (no reward is granted). */
 export function FortuneWheel({ account, onRequireAuth }: { account: Account | null; onRequireAuth: () => void }) {
   const reduced = useReducedMotion();
-  const setAccount = useAccountStore((state) => state.setAccount);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [spunToday, setSpunToday] = useState(account?.wheelSpinDay === todayKey());
@@ -111,7 +110,7 @@ export function FortuneWheel({ account, onRequireAuth }: { account: Account | nu
     animateTo(WHEEL_INDEX_BY_ID[result.segmentId] ?? 0, () => {
       setSpinning(false);
       setSpunToday(true);
-      setAccount(result.account, result.plans, result.quests);
+      applyAccountResult(result);
       applyReward(result.reward);
     });
   }

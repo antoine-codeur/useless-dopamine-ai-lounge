@@ -1,7 +1,7 @@
 import { CreditCard, Crown, Gift, MessageSquare, Package, RotateCcw, ShoppingBag, Trophy, Zap } from "lucide-react";
 import { Button } from "../../components/Button/Button";
 import { showToast } from "../../components/Toast/toast.store";
-import { useAccountStore } from "../profile/account.store";
+import { applyAccountResult, useAccountStore } from "../profile/account.store";
 import { useUserStore } from "../profile/profile.store";
 import { usePersonaStore } from "../personas/persona.store";
 import { bumpQuest, useQuestStore } from "../quests/quest.store";
@@ -118,7 +118,7 @@ export function PurchasesCard() {
 
       if (!result?.ok) {
         if (result?.account) {
-          setAccount(result.account, result.plans, result.quests);
+          applyAccountResult(result);
         }
 
         showToast({
@@ -129,7 +129,7 @@ export function PurchasesCard() {
         return;
       }
 
-      setAccount(result.account, result.plans, result.quests);
+      applyAccountResult(result);
     } else {
       if (!account) {
         return;

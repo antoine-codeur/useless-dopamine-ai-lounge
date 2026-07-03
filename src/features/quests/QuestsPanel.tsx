@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { CalendarCheck, Check, Gift, MessageSquare, Puzzle, Search, Star, Trophy, Zap } from "lucide-react";
 import { Button } from "../../components/Button/Button";
 import { GuestPanel } from "../account/GuestPanel";
-import { useAccountStore } from "../profile/account.store";
+import { applyAccountResult, useAccountStore } from "../profile/account.store";
 import { useUserStore } from "../profile/profile.store";
 import { useChatStore } from "../chat/chat.store";
 import { computeActivityStats } from "../activity/activity.stats";
@@ -178,14 +178,14 @@ export function QuestsPanel({ activityByDate, onClaimQuest, onCreateAccount, onL
 
                   if (!result?.ok) {
                     if (result?.account) {
-                      setAccount(result.account, result.plans, result.quests);
+                      applyAccountResult(result);
                     }
 
                     showToast({ variant: "info", title: "Already claimed today", description: "Your next booster unlocks tomorrow." });
                     return;
                   }
 
-                  setAccount(result.account, result.plans, result.quests);
+                  applyAccountResult(result);
                   useQuestStore.getState().claimDailyBooster();
                   bumpQuest("daily-booster");
                   showToast({ variant: "success", title: "Booster added", description: "Open it from the Earn page — tap fast for a higher rarity." });
