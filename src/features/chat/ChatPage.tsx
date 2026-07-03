@@ -1,27 +1,20 @@
-import { ChangeEvent, CSSProperties, DragEvent as ReactDragEvent, FocusEvent as ReactFocusEvent, FormEvent, KeyboardEvent, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, CSSProperties, DragEvent as ReactDragEvent, FocusEvent as ReactFocusEvent, FormEvent, KeyboardEvent, PointerEvent as ReactPointerEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Archive,
   ChevronDown,
   CircleDashed,
   FileText,
   Ghost,
   Gift,
-  GripVertical,
   ImagePlus,
   Mic,
   MicOff,
   Lock,
-  LayoutPanelLeft,
   ListPlus,
-  MessageSquarePlus,
-  MoreHorizontal,
   PanelRightClose,
   PanelRightOpen,
   Paperclip,
   Pencil,
-  Pin,
-  PinOff,
   Send,
   Sparkles,
   Trash2,
@@ -81,7 +74,7 @@ import { ThumbBar } from "./ThumbBar";
 import { OnboardingScreen } from "./OnboardingScreen";
 import { ProfileSettings } from "./ProfileSettings";
 import { AccountMenu } from "./AccountMenu";
-import { navItems } from "./navItems";
+import { Sidebar } from "./Sidebar";
 import { AvatarModal } from "../onboarding/AvatarModal";
 import { cropAvatar } from "../../lib/avatar";
 import { isoNow } from "../../lib/date";
@@ -205,8 +198,6 @@ export function ChatPage() {
   const insertThread = useChatStore((state) => state.insertThread);
   const restoreThread = useChatStore((state) => state.restoreThread);
   const renameThread = useChatStore((state) => state.renameThread);
-  const togglePinThread = useChatStore((state) => state.togglePinThread);
-  const toggleArchiveThread = useChatStore((state) => state.toggleArchiveThread);
   const setThreadTemporary = useChatStore((state) => state.setThreadTemporary);
   const account = useAccountStore((state) => state.account);
   const plans = useAccountStore((state) => state.plans);
@@ -1817,153 +1808,49 @@ export function ChatPage() {
       {mobileNavOpen ? (
         <button aria-label="Close navigation" className="mobile-nav-backdrop" onClick={() => setMobileNavOpen(false)} type="button" />
       ) : null}
-      <aside className="sidebar">
-        <div className="sidebar__top">
-          {/* Toggle first & leftmost: its position never moves between modes. */}
-          <IconButton className="sidebar-toggle" label={sidebarCollapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"} onClick={() => setSidebarCollapsed((value) => !value)} type="button">
-            <LayoutPanelLeft size={17} />
-          </IconButton>
-          <div className="brand-block">
-            <div className="brand-mark">
-              <Sparkles size={17} />
-            </div>
-            <div>
-              <h1>{prototype.headline}</h1>
-              <p>{prototype.eyebrow}</p>
-            </div>
-          </div>
-        </div>
-
-        <nav className="primary-nav" aria-label="Primary navigation">
-          {navItems.map((item) => (
-            <button
-              className="primary-nav__item"
-              data-active={view === item.view}
-              data-rail-hidden={item.railHidden || undefined}
-              data-tooltip={sidebarCollapsed ? item.label : undefined}
-              key={item.view}
-              onClick={() => {
-                setView(item.view);
-                // Close the phone drawer even when re-selecting the active
-                // section (the [view] effect only fires on an actual change).
-                setMobileNavOpen(false);
-                bumpQuest("page-visits");
-              }}
-              type="button"
-            >
-              <item.icon size={16} />
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <Button className="new-chat-button" data-tooltip={sidebarCollapsed ? "New session" : "Create a new conversation"} onClick={newThread} size="sm" type="button" variant="secondary">
-          <MessageSquarePlus size={16} />
-          <span>New session</span>
-        </Button>
-
-        <section className="recents-panel" aria-label="Recent sessions">
-          <div className="section-label">
-            <span>Threads</span>
-            <IconButton aria-pressed={showArchivedThreads} className="mini-icon-button" label={showArchivedThreads ? "Hide archived threads" : "Show archived threads"} onClick={() => setShowArchivedThreads((value) => !value)} type="button">
-              <Archive size={14} />
-            </IconButton>
-          </div>
-          <div className="session-list">
-            {visibleThreads.map((thread) => (
-              <div className="session-row" data-active={thread.id === activeThreadId} key={thread.id} ref={threadMenuId === thread.id ? threadMenuRef : undefined}>
-                {renameThreadId === thread.id ? (
-                  <input
-                    aria-label="Conversation title"
-                    className="session-rename-input"
-                    onBlur={commitRename}
-                    onChange={(event) => setRenameValue(event.currentTarget.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        commitRename();
-                      }
-                      if (event.key === "Escape") {
-                        setRenameThreadId(null);
-                      }
-                    }}
-                    value={renameValue}
-                    autoFocus
-                  />
-                ) : (
-                  <button className="session-item" onClick={() => { setActiveThread(thread.id); setView("chat"); setMobileNavOpen(false); }} type="button">
-                    {thread.temporary ? <Ghost size={13} /> : thread.pinned ? <Pin size={13} /> : thread.archived ? <Archive size={13} /> : null}
-                    <span>{thread.title}</span>
-                  </button>
-                )}
-                <IconButton
-                  className="mini-icon-button"
-                  label={`Actions for ${thread.title}`}
-                  tooltip="Conversation actions"
-                  onClick={(event: ReactMouseEvent<HTMLButtonElement>) => {
-                    if (threadMenuId === thread.id) {
-                      setThreadMenuId(null);
-                      return;
-                    }
-
-                    // Fixed positioning escapes the scroll container's clipping;
-                    // flip above the trigger when too close to the bottom edge.
-                    const rect = event.currentTarget.getBoundingClientRect();
-                    const up = rect.bottom + 200 > window.innerHeight - 8;
-                    setThreadMenuPosition({ left: rect.right, top: up ? rect.top - 4 : rect.bottom + 4, up });
-                    setThreadMenuId(thread.id);
-                  }}
-                  type="button"
-                >
-                  <MoreHorizontal size={14} />
-                </IconButton>
-                {threadMenuId === thread.id ? (
-                  <div
-                    className="thread-menu"
-                    role="menu"
-                    style={
-                      threadMenuPosition
-                        ? {
-                            left: threadMenuPosition.left,
-                            top: threadMenuPosition.top,
-                            transform: threadMenuPosition.up ? "translate(-100%, -100%)" : "translateX(-100%)",
-                          }
-                        : undefined
-                    }
-                  >
-                    <button onClick={() => startRename(thread)} role="menuitem" type="button"><Pencil size={15} /> Rename</button>
-                    <button onClick={() => { togglePinThread(thread.id); setThreadMenuId(null); }} role="menuitem" type="button">
-                      {thread.pinned ? <PinOff size={15} /> : <Pin size={15} />}
-                      {thread.pinned ? "Unpin" : "Pin"} chat
-                    </button>
-                    <button onClick={() => { toggleArchiveThread(thread.id); setThreadMenuId(null); }} role="menuitem" type="button"><Archive size={15} /> {thread.archived ? "Restore" : "Archive"}</button>
-                    <button className="danger-menu-item" onClick={() => handleDeleteThread(thread)} role="menuitem" type="button"><Trash2 size={15} /> Delete</button>
-                  </div>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <AccountMenu
-          account={account}
-          accountButtonRef={accountButtonRef}
-          accountMenuPosition={accountMenuPosition}
-          accountMenuRef={accountMenuRef}
-          copyAccountId={copyAccountId}
-          currentPlan={currentPlan}
-          handleAccountHoverEnter={handleAccountHoverEnter}
-          handleAccountHoverLeave={handleAccountHoverLeave}
-          handleSignOut={handleSignOut}
-          openAccountMenu={openAccountMenu}
-          openAccountView={openAccountView}
-          openAuth={openAuth}
-          setShowAccountMenu={setShowAccountMenu}
-          showAccountMenu={showAccountMenu}
-        />
-        <button aria-label="Resize sidebar" className="sidebar-resizer" onPointerDown={() => setIsResizingSidebar(true)} type="button">
-          <GripVertical size={14} />
-        </button>
-      </aside>
+      <Sidebar
+        accountMenu={
+          <AccountMenu
+            account={account}
+            accountButtonRef={accountButtonRef}
+            accountMenuPosition={accountMenuPosition}
+            accountMenuRef={accountMenuRef}
+            copyAccountId={copyAccountId}
+            currentPlan={currentPlan}
+            handleAccountHoverEnter={handleAccountHoverEnter}
+            handleAccountHoverLeave={handleAccountHoverLeave}
+            handleSignOut={handleSignOut}
+            openAccountMenu={openAccountMenu}
+            openAccountView={openAccountView}
+            openAuth={openAuth}
+            setShowAccountMenu={setShowAccountMenu}
+            showAccountMenu={showAccountMenu}
+          />
+        }
+        activeThreadId={activeThreadId}
+        commitRename={commitRename}
+        handleDeleteThread={handleDeleteThread}
+        newThread={newThread}
+        renameThreadId={renameThreadId}
+        renameValue={renameValue}
+        setIsResizingSidebar={setIsResizingSidebar}
+        setMobileNavOpen={setMobileNavOpen}
+        setRenameThreadId={setRenameThreadId}
+        setRenameValue={setRenameValue}
+        setShowArchivedThreads={setShowArchivedThreads}
+        setSidebarCollapsed={setSidebarCollapsed}
+        setThreadMenuId={setThreadMenuId}
+        setThreadMenuPosition={setThreadMenuPosition}
+        setView={setView}
+        showArchivedThreads={showArchivedThreads}
+        sidebarCollapsed={sidebarCollapsed}
+        startRename={startRename}
+        view={view}
+        threadMenuId={threadMenuId}
+        threadMenuPosition={threadMenuPosition}
+        threadMenuRef={threadMenuRef}
+        visibleThreads={visibleThreads}
+      />
 
       <section
         className="chat-stage"
