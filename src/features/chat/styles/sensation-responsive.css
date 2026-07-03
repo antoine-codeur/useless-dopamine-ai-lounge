@@ -1,0 +1,510 @@
+/* --- Sensation layer ------------------------------------------------------ */
+/* Interactive cards lift toward the pointer and pick up the brand hue. */
+.plan-card,
+.earn-card,
+.quest-card,
+.gallery-item,
+.theme-chip,
+.session-item {
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.plan-card:not(:disabled):hover,
+.quest-card:not(:disabled):hover,
+.earn-card:hover,
+.gallery-item:hover {
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-sm), 0 6px 22px color-mix(in srgb, var(--color-primary) 14%, transparent);
+  transform: translateY(-2px);
+}
+
+.plan-card:not(:disabled):active,
+.quest-card:not(:disabled):active {
+  transform: translateY(0) scale(0.99);
+}
+
+/* Locked plans explain exactly what is missing. */
+.plan-card__missing {
+  color: var(--color-warning);
+  font-weight: var(--font-semibold);
+}
+
+/* Empty conversation: the intro floats in the center of the stage. */
+.app-shell[data-empty="true"] .chat-scroll-area {
+  display: grid;
+  place-items: center;
+}
+
+/* Thread row actions appear on intent (hover/focus/active row) instead of always. */
+.session-row > .mini-icon-button {
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.session-row:hover > .mini-icon-button,
+.session-row:focus-within > .mini-icon-button,
+.session-row[data-active="true"] > .mini-icon-button {
+  opacity: 1;
+}
+
+/* Toggles announce their pressed state. */
+.mini-icon-button[aria-pressed="true"] {
+  background: var(--gradient-brand-soft);
+  box-shadow: inset 0 0 0 1px var(--border-brand);
+  color: var(--color-text);
+}
+
+
+/* --- Activity & profile insights ----------------------------------------- */
+.plan-pill {
+  background: var(--gradient-brand-soft);
+  border: 1px solid var(--border-brand);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: var(--font-semibold);
+  padding: 0.08rem 0.5rem;
+  vertical-align: middle;
+}
+
+.profile-metrics--wide,
+.activity-insights {
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+}
+
+.heatmap-card__header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.heatmap-card__header h4 {
+  margin: 0;
+}
+
+.heatmap-modes {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 17rem;
+}
+
+/* Locked themes: muted with a lock and their unlock cost. */
+.theme-chip[data-locked="true"] {
+  color: var(--color-mutedText);
+}
+
+.theme-chip[data-locked="true"] svg {
+  color: var(--color-warning);
+}
+
+.theme-chip__cost {
+  color: var(--color-warning);
+  font-size: 0.72rem;
+  font-weight: var(--font-semibold);
+  margin-left: auto;
+}
+
+/* Locked composer tools point to the plans. */
+.composer-tool--locked svg {
+  color: var(--color-warning);
+}
+
+/* Heatmap card breathing room. */
+.heatmap-card {
+  padding: 1.05rem 1.15rem 0.95rem;
+}
+
+/* --- Plans focus mode: chrome disappears, plans own the screen ----------- */
+.app-shell[data-focus="true"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app-shell[data-focus="true"] .sidebar,
+.app-shell[data-focus="true"] .inspector,
+.app-shell[data-focus="true"] .topbar {
+  display: none;
+}
+
+.plans-panel {
+  position: relative;
+}
+
+.plans-panel__back {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: var(--font-semibold);
+  gap: 0.4rem;
+  left: 0;
+  padding: 0.35rem 0.85rem;
+  position: absolute;
+  top: 0;
+  transition: var(--transition-colors), transform var(--duration-fast) var(--ease-out);
+}
+
+.plans-panel__back:hover {
+  border-color: var(--border-brand);
+  transform: translateX(-2px);
+}
+
+/* Compact 4-across cards so all plans fit without scrolling. */
+.app-shell[data-focus="true"] .plan-grid {
+  grid-template-columns: repeat(auto-fit, minmax(14.5rem, 1fr));
+}
+
+.app-shell[data-focus="true"] .plan-card {
+  gap: 0.55rem;
+  padding: 1.05rem;
+}
+
+.app-shell[data-focus="true"] .plan-card__price strong {
+  font-size: 2.2rem;
+}
+
+/* Composer edit mode: the pencil lights up while an earlier prompt is targeted. */
+.composer-tool[data-active="true"] {
+  background: var(--gradient-brand-soft);
+  box-shadow: inset 0 0 0 1px var(--border-brand);
+  color: var(--color-primary);
+}
+
+.composer-hint[data-editing="true"] {
+  color: var(--color-primary);
+  font-weight: var(--font-semibold);
+}
+
+.page-heading__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Temporary-chat toggle lights up when active. */
+.compact-button[data-active="true"] {
+  background: var(--gradient-brand-soft);
+  box-shadow: inset 0 0 0 1px var(--border-brand);
+  color: var(--color-primary);
+}
+
+.billing-panel .stat-row strong {
+  text-align: right;
+}
+
+/* One click back to the newest message. */
+.jump-to-bottom {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
+  cursor: pointer;
+  display: inline-flex;
+  height: 2.1rem;
+  justify-content: center;
+  left: 50%;
+  position: absolute;
+  top: -2.7rem;
+  transform: translateX(-50%);
+  transition: var(--transition-colors), transform var(--duration-fast) var(--ease-out);
+  width: 2.1rem;
+  z-index: var(--z-raised);
+}
+
+.jump-to-bottom:hover {
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-md), var(--glow-primary);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.prompt-dock {
+  position: relative;
+}
+
+/* Thumb bar (phone navigation) — desktop hides it; the ≤760px media block
+   (earlier in the file) turns it on, so the guard must live in its own query. */
+@media (min-width: 761px) {
+  .thumb-bar {
+    display: none;
+  }
+}
+
+.thumb-bar__item {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-lg);
+  color: var(--color-mutedText);
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: var(--font-semibold);
+  gap: 3px;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.25rem 0;
+  transition: var(--transition-colors);
+}
+
+.thumb-bar__item[data-active="true"] {
+  background: var(--gradient-brand-soft);
+  color: var(--color-primary);
+}
+
+.thumb-bar__item:active {
+  transform: scale(0.94);
+}
+
+.thumb-bar__item .avatar {
+  font-size: 0.58rem;
+  height: 1.45rem;
+  width: 1.45rem;
+}
+
+/* Icons never squish — the text ellipsizes instead. */
+.primary-nav__item svg,
+.session-item svg,
+.thumb-bar__item svg,
+.account-popover button svg {
+  flex: 0 0 auto;
+}
+
+.session-item span,
+.primary-nav__item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Message queue (Pro+): pending prompts wait in a strip above the field. */
+.queue-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-bottom: 0.4rem;
+}
+
+.queue-pill {
+  align-items: center;
+  background: var(--gradient-brand-soft);
+  border: 1px solid var(--border-brand);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: var(--font-medium);
+  gap: 0.35rem;
+  padding: 0.16rem 0.3rem 0.16rem 0.55rem;
+}
+
+.queue-pill svg {
+  color: var(--color-primary);
+  flex: 0 0 auto;
+}
+
+.queue-pill button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-mutedText);
+  cursor: pointer;
+  display: inline-flex;
+  height: 1.2rem;
+  justify-content: center;
+  width: 1.2rem;
+}
+
+.queue-pill button:hover {
+  background: var(--color-surface);
+  color: var(--color-danger);
+}
+
+/* Data cards never force horizontal page scroll — heatmap scrolls inside. */
+.heatmap-card {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.activity-heatmap {
+  max-width: 100%;
+}
+
+@media (max-width: 760px) {
+  /* Activity page fits the phone. */
+  .page-heading {
+    flex-direction: column;
+  }
+
+  .activity-insights,
+  .profile-metrics--wide,
+  .dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-metrics div + div {
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .heatmap-card__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  /* Virtual keyboard open: the thumb bar slides away instead of riding it. */
+  .app-shell[data-keyboard="true"] ~ .thumb-bar,
+  .app-shell[data-keyboard="true"] .thumb-bar {
+    transform: translateY(130%);
+  }
+
+  .app-shell[data-keyboard="true"] .chat-stage {
+    padding-bottom: 0.4rem;
+  }
+
+  .thumb-bar {
+    transition: transform var(--duration-base) var(--ease-in-out);
+  }
+}
+
+/* ================= Phone drawer & touch accessibility ================= */
+
+@media (max-width: 760px) {
+  /* "Chats" / account in the thumb bar summon the sidebar as a drawer. */
+  .mobile-nav-backdrop {
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    background: rgba(5, 8, 12, 0.55);
+    border: 0;
+    cursor: pointer;
+    inset: 0;
+    position: fixed;
+    z-index: var(--z-overlay);
+  }
+
+  .app-shell[data-mobile-nav="true"] .sidebar {
+    animation: drawer-in 0.22s var(--ease-out);
+    border-right: 1px solid var(--color-border);
+    bottom: 0;
+    box-shadow: var(--shadow-xl);
+    display: grid;
+    left: 0;
+    max-width: none;
+    position: fixed;
+    top: 0;
+    width: min(21rem, 86vw);
+    z-index: var(--z-modal);
+  }
+
+  .app-shell[data-mobile-nav="true"] .sidebar-resizer {
+    display: none;
+  }
+
+  /* The popover must float above the drawer. */
+  .account-popover {
+    z-index: calc(var(--z-modal) + 10);
+  }
+}
+
+@media (min-width: 761px) {
+  .mobile-nav-backdrop {
+    display: none;
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    opacity: 0.5;
+    transform: translateX(-14%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Touch screens have no hover: every hover-revealed control stays visible. */
+@media (hover: none) {
+  .chat-bubble__actions,
+  .session-row > .mini-icon-button,
+  .profile-avatar-edit > span {
+    opacity: 1;
+  }
+
+  .profile-avatar-edit > span {
+    transform: scale(0.92);
+  }
+}
+
+/* ================= Drop-to-attach & dictation ================= */
+
+.chat-stage {
+  position: relative;
+}
+
+.drop-overlay {
+  align-content: center;
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  background: color-mix(in srgb, var(--color-background) 72%, transparent);
+  border: 2px dashed var(--border-brand);
+  border-radius: var(--radius-2xl);
+  color: var(--color-primary);
+  display: grid;
+  gap: 0.25rem;
+  inset: 0.6rem;
+  justify-items: center;
+  pointer-events: none;
+  position: absolute;
+  z-index: var(--z-overlay);
+}
+
+.drop-overlay strong {
+  font-size: var(--text-lg);
+}
+
+.drop-overlay span {
+  color: var(--color-mutedText);
+  font-size: 0.82rem;
+}
+
+.composer-tool--mic[data-listening] {
+  animation: mic-pulse 1.4s ease-in-out infinite;
+  border-color: color-mix(in srgb, var(--color-danger) 55%, var(--color-border));
+  color: var(--color-danger);
+}
+
+@keyframes mic-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-danger) 35%, transparent);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-danger) 12%, transparent);
+  }
+}
+
+/* No inspector below 1160px — its toggle would be a dead button. */
+@media (max-width: 1160px) {
+  .inspector-toggle {
+    display: none;
+  }
+}

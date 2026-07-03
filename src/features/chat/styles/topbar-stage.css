@@ -1,0 +1,131 @@
+.conversation-title {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  gap: 0.35rem;
+  min-height: 2rem;
+  /* Allow the title to shrink and truncate instead of shoving the topbar
+     actions off-screen on narrow phones with a long (renamable) title. */
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 0.35rem;
+}
+
+.conversation-title h2 {
+  font-size: 0.98rem;
+  font-weight: 720;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar__actions {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.45rem;
+}
+
+.backend-pill {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-mutedText);
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 650;
+  gap: 0.35rem;
+  min-height: 2rem;
+  padding: 0 0.7rem;
+  white-space: nowrap;
+}
+
+.backend-pill[data-status="online"] {
+  color: color-mix(in srgb, var(--color-success) 82%, var(--color-text));
+}
+
+.compact-button {
+  min-height: 2rem;
+  padding: 0.35rem 0.62rem;
+}
+
+.compact-button--icon {
+  padding: 0;
+  width: 2rem;
+}
+
+/* The full-width stage scrolls, so the scrollbar lives at the window edge —
+   never glued to the centered content column. */
+.chat-scroll-area {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 clamp(1rem, 2vw, 1.5rem);
+  scrollbar-gutter: stable;
+}
+
+.chat-intro {
+  margin: 2.2rem auto 1.2rem;
+  max-width: 48rem;
+}
+
+/* Readable column centered inside the full-width scroller. */
+.message-feed__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0 auto;
+  max-width: 48rem;
+  width: 100%;
+}
+
+.intro-mark {
+  height: 2.5rem;
+  margin-bottom: 1rem;
+  width: 2.5rem;
+}
+
+.chat-intro h3 {
+  font-size: clamp(1.45rem, 2.3vw, 2rem);
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.chat-intro p {
+  color: var(--color-mutedText);
+  line-height: 1.55;
+  margin-top: 0.55rem;
+  max-width: 39rem;
+}
+
+.message-feed {
+  height: 100%;
+  min-height: 9rem;
+  overflow-y: auto;
+  padding: 0.25rem 0 1.2rem;
+  scroll-behavior: smooth;
+}
+
+/* Panels flow inside the scrolling stage: wide on large screens, no own scroll. */
+.content-panel {
+  display: grid;
+  gap: 1rem;
+  margin: 1.75rem auto 2rem;
+  max-width: 90rem;
+  padding-bottom: 1rem;
+  width: 100%;
+}
+
+/* Forms read better narrow. */
+.profile-panel {
+  max-width: 56rem;
+}
+
+.content-panel h3 {
+  font-size: 1.7rem;
+}
+

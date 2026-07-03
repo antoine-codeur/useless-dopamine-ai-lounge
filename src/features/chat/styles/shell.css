@@ -1,0 +1,174 @@
+.app-shell {
+  background: var(--gradient-app), var(--color-background);
+  background-attachment: fixed;
+  color: var(--color-text);
+  display: grid;
+  /* --sidebar-width is set inline by the shell (resize/collapse); media
+     queries below override the whole template, so breakpoints keep priority. */
+  grid-template-columns: var(--sidebar-width, 17.5rem) minmax(0, 1fr) var(--inspector-width, 19rem);
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Retractable inspector: widgets only when you want them. */
+.app-shell[data-inspector-collapsed="true"] .inspector {
+  display: none;
+}
+
+/* Collapsed sidebar = icon rail: core navigation stays, labels go. */
+.app-shell[data-sidebar-collapsed="true"] .brand-block > div:not(.brand-mark),
+.app-shell[data-sidebar-collapsed="true"] .primary-nav__item span,
+.app-shell[data-sidebar-collapsed="true"] .primary-nav__item[data-rail-hidden="true"],
+.app-shell[data-sidebar-collapsed="true"] .new-chat-button .button__content span,
+.app-shell[data-sidebar-collapsed="true"] .sidebar__account > div:not(.avatar),
+.app-shell[data-sidebar-collapsed="true"] .sidebar__account > svg {
+  display: none;
+}
+
+/* Keep the recents row's grid slot so the account button stays pinned bottom. */
+.app-shell[data-sidebar-collapsed="true"] .recents-panel {
+  visibility: hidden;
+}
+
+/* Rail: toggle stays on top (same DOM order), everything hard-centered. */
+.app-shell[data-sidebar-collapsed="true"] .sidebar__top {
+  align-items: center;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.app-shell[data-sidebar-collapsed="true"] .brand-block {
+  padding: 0 0 0.2rem;
+}
+
+.app-shell[data-sidebar-collapsed="true"] .brand-block,
+.app-shell[data-sidebar-collapsed="true"] .sidebar__account,
+.app-shell[data-sidebar-collapsed="true"] .primary-nav__item,
+.app-shell[data-sidebar-collapsed="true"] .new-chat-button {
+  justify-content: center;
+}
+
+/* The 2.25rem squares need room: shrink the rail's inline padding, and let
+   the sidebar GRID center every child — no per-item margin tricks. */
+.app-shell[data-sidebar-collapsed="true"] .sidebar {
+  justify-items: center;
+  padding-inline: 0.45rem;
+}
+
+/* The account button bleeds full-width when expanded (negative margins matching
+   the padding): in the rail it becomes a plain centered circle. */
+.app-shell[data-sidebar-collapsed="true"] .sidebar__account {
+  align-items: center;
+  border-radius: var(--radius-full);
+  border-top: 0;
+  display: flex;
+  height: 2.6rem;
+  justify-content: center;
+  margin: 0.35rem 0 0;
+  min-height: 0;
+  padding: 0;
+  width: 2.6rem;
+}
+
+/* Every rail item is the SAME centered square — like the avatar. */
+.app-shell[data-sidebar-collapsed="true"] .sidebar-toggle,
+.app-shell[data-sidebar-collapsed="true"] .primary-nav__item,
+.app-shell[data-sidebar-collapsed="true"] .new-chat-button {
+  height: 2.25rem;
+  margin-inline: auto;
+  min-height: 2.25rem;
+  padding: 0;
+  width: 2.25rem;
+}
+
+.app-shell[data-sidebar-collapsed="true"] .primary-nav {
+  justify-items: center;
+}
+
+.app-shell[data-sidebar-collapsed="true"] .brand-mark {
+  margin-inline: auto;
+}
+
+.app-shell[data-landing="true"] .topbar {
+  border-bottom-color: transparent;
+}
+
+.app-shell[data-landing="true"] .chat-stage {
+  position: relative;
+}
+
+.app-shell[data-landing="true"] .chat-scroll-area {
+  display: grid;
+  place-items: center;
+  padding-bottom: 8rem;
+}
+
+.app-shell[data-landing="true"] .chat-intro {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.app-shell[data-landing="true"] .chat-intro .intro-mark,
+.app-shell[data-landing="true"] .message-feed {
+  display: none;
+}
+
+.app-shell[data-landing="true"] .chat-intro h3 {
+  font-size: 1.42rem;
+  font-weight: 560;
+}
+
+.app-shell[data-landing="true"] .chat-intro p {
+  display: none;
+}
+
+.app-shell[data-landing="true"] .prompt-dock {
+  bottom: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: calc(50% + 1.7rem);
+}
+
+.sidebar {
+  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-background));
+  border-right: 1px solid var(--color-border);
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0.65rem;
+  position: relative;
+}
+
+.sidebar-resizer {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  bottom: 0;
+  color: var(--color-mutedText);
+  cursor: col-resize;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: -0.45rem;
+  top: 0;
+  width: 0.9rem;
+  z-index: 4;
+}
+
+.sidebar-resizer:hover {
+  color: var(--color-primary);
+}
+
+.sidebar__top {
+  align-items: center;
+  display: flex;
+  gap: 0.45rem;
+  justify-content: flex-start;
+  min-height: 2.25rem;
+}
+
