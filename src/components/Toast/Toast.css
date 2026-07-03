@@ -1,0 +1,97 @@
+.toaster {
+  bottom: var(--space-6);
+  display: grid;
+  gap: var(--space-2);
+  justify-items: end;
+  max-width: 22.5rem;
+  position: fixed;
+  right: var(--space-6);
+  z-index: var(--z-toast);
+}
+
+.toast {
+  align-items: flex-start;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  color: var(--color-text);
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  width: max-content;
+  max-width: 100%;
+}
+
+.toast__icon {
+  display: inline-flex;
+  margin-top: 1px;
+}
+
+.toast[data-variant="success"] .toast__icon {
+  color: var(--color-success);
+}
+
+.toast[data-variant="info"] .toast__icon {
+  color: var(--color-primary);
+}
+
+.toast[data-variant="warning"] .toast__icon {
+  color: var(--color-warning);
+}
+
+.toast[data-variant="danger"] .toast__icon {
+  color: var(--color-danger);
+}
+
+.toast__body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.toast__body strong {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+}
+
+.toast__body p {
+  color: var(--color-mutedText);
+  font-size: var(--text-xs);
+  margin: 0;
+}
+
+.toast__action {
+  background: var(--gradient-brand-soft);
+  border: 1px solid var(--border-brand);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  margin-left: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  transition: var(--transition-colors), transform var(--duration-fast) var(--ease-out);
+}
+
+.toast__action:hover {
+  box-shadow: var(--glow-primary);
+  transform: translateY(-1px);
+}
+
+.toast__close {
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--color-mutedText);
+  cursor: pointer;
+  display: inline-flex;
+  margin: -2px -4px 0 0;
+  padding: 4px;
+}
+
+.toast__close:hover {
+  background: var(--color-surfaceAlt);
+  color: var(--color-text);
+}

@@ -1,0 +1,83 @@
+.activity-heatmap {
+  display: grid;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+  scrollbar-width: none;
+}
+
+.activity-heatmap::-webkit-scrollbar {
+  display: none;
+}
+
+.activity-heatmap__grid {
+  display: grid;
+  gap: 3px;
+  grid-auto-columns: 11px;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 11px);
+  width: max-content;
+}
+
+/* Weekly/cumulative: one square per week, single row. */
+.activity-heatmap__grid[data-single="true"] {
+  grid-template-rows: 11px;
+}
+
+.activity-heatmap__grid span {
+  background: color-mix(in srgb, var(--color-border) 55%, var(--color-surface));
+  border-radius: 3px;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.activity-heatmap__grid span[data-level="1"] {
+  background: color-mix(in srgb, var(--color-primary) 28%, var(--color-surface));
+}
+
+.activity-heatmap__grid span[data-level="2"] {
+  background: color-mix(in srgb, var(--color-primary) 50%, var(--color-surface));
+}
+
+.activity-heatmap__grid span[data-level="3"] {
+  background: color-mix(in srgb, var(--color-primary) 74%, var(--color-surface));
+}
+
+.activity-heatmap__grid span[data-level="4"] {
+  background: var(--color-primary);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+
+.activity-heatmap__grid span[data-future] {
+  visibility: hidden;
+}
+
+.activity-heatmap__months {
+  color: var(--color-mutedText);
+  display: grid;
+  font-size: 0.68rem;
+  gap: 3px;
+  grid-auto-columns: 11px;
+  grid-auto-flow: column;
+  grid-template-rows: 1rem;
+  width: max-content;
+}
+
+.activity-heatmap__months span {
+  grid-row: 1;
+  white-space: nowrap;
+}
+
+/* Mode switches re-mount the grid: a quick fade makes the change felt. */
+.activity-heatmap__grid {
+  animation: heatmap-fade var(--duration-base) var(--ease-out);
+}
+
+@keyframes heatmap-fade {
+  from {
+    opacity: 0.35;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

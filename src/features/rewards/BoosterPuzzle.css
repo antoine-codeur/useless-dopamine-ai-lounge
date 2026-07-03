@@ -1,0 +1,245 @@
+.puzzle-backdrop {
+  align-items: center;
+  backdrop-filter: blur(6px);
+  background: color-mix(in srgb, #060913 60%, transparent);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: var(--z-popover);
+}
+
+.puzzle-stage {
+  cursor: pointer;
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+  padding: var(--space-8);
+  touch-action: manipulation;
+  user-select: none;
+}
+
+/* The board — a soft white frame like the mockup, tinted by rarity in frenzy. */
+.puzzle-board {
+  background: #f7f8fb;
+  border: 3px solid #ffffff;
+  border-radius: 26px;
+  box-shadow: var(--shadow-xl);
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(2, 7rem);
+  grid-template-rows: repeat(2, 7rem);
+  padding: 0.9rem;
+  transition: box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.puzzle-board[data-frenzy] {
+  box-shadow:
+    var(--shadow-xl),
+    0 0 0 3px var(--rarity-color),
+    0 0 42px color-mix(in srgb, var(--rarity-color) 62%, transparent);
+}
+
+.puzzle-slot {
+  align-items: center;
+  border: 2px dashed rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  display: flex;
+  justify-content: center;
+}
+
+.puzzle-piece {
+  border-radius: 16px;
+  box-shadow:
+    inset 0 -4px 0 rgba(0, 0, 0, 0.07),
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    0 6px 14px rgba(0, 0, 0, 0.12);
+  height: 100%;
+  position: relative;
+  width: 100%;
+}
+
+/* A little puzzle knob for charm. */
+.puzzle-piece::after {
+  background: inherit;
+  border-radius: 999px;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+  content: "";
+  height: 1.4rem;
+  position: absolute;
+  right: -0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.4rem;
+}
+
+.puzzle-slot:nth-child(even) .puzzle-piece::after {
+  left: -0.6rem;
+  right: auto;
+}
+
+/* Frenzy countdown: a bar that empties — tap before it runs out. */
+.puzzle-frenzy-track {
+  background: color-mix(in srgb, #ffffff 20%, transparent);
+  border-radius: var(--radius-full);
+  height: 0.55rem;
+  overflow: hidden;
+  width: 15rem;
+}
+
+.puzzle-frenzy-track > span {
+  animation-fill-mode: forwards;
+  animation-name: frenzy-drain;
+  animation-timing-function: linear;
+  background: var(--rarity-color);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+}
+
+@keyframes frenzy-drain {
+  from {
+    width: 100%;
+  }
+
+  to {
+    width: 0%;
+  }
+}
+
+.puzzle-rarity {
+  color: var(--rarity-color);
+  font-size: 1.6rem;
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-wider);
+  text-shadow: 0 4px 26px color-mix(in srgb, var(--rarity-color) 70%, transparent);
+  text-transform: uppercase;
+}
+
+.puzzle-rarity--final {
+  font-size: 1.9rem;
+}
+
+.puzzle-hint {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.95rem;
+  font-weight: var(--font-semibold);
+}
+
+.puzzle-hint--frenzy {
+  animation: hint-bounce 0.5s var(--ease-out) infinite alternate;
+  color: #ffffff;
+}
+
+@keyframes hint-bounce {
+  to {
+    transform: scale(1.08);
+  }
+}
+
+.puzzle-result {
+  cursor: default;
+  display: grid;
+  gap: 0.55rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.puzzle-result__burst {
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.puzzle-result__burst > span {
+  background: var(--rarity-color);
+  border-radius: var(--radius-full);
+  height: 11px;
+  pointer-events: none;
+  position: absolute;
+  width: 11px;
+}
+
+.puzzle-result__orb {
+  align-items: center;
+  background: linear-gradient(135deg, #ffffff, color-mix(in srgb, var(--rarity-color) 45%, #ffffff));
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 44px color-mix(in srgb, var(--rarity-color) 70%, transparent);
+  display: flex;
+  font-size: 2.4rem;
+  height: 6rem;
+  justify-content: center;
+  width: 6rem;
+}
+
+.puzzle-result__credits {
+  color: #ffffff;
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-tight);
+  text-shadow: 0 4px 34px color-mix(in srgb, var(--rarity-color) 70%, transparent);
+}
+
+.puzzle-result small {
+  color: rgba(255, 255, 255, 0.72);
+  margin-bottom: 0.3rem;
+}
+
+/* --- Sugar layer ----------------------------------------------------------- */
+.puzzle-flash {
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--rarity-color) 55%, transparent), transparent);
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+}
+
+.puzzle-sparks {
+  height: 0;
+  pointer-events: none;
+  position: relative;
+  width: 0;
+  z-index: 2;
+}
+
+.puzzle-sparks span {
+  color: var(--rarity-color);
+  font-size: 1.5rem;
+  position: absolute;
+  text-shadow: 0 0 14px color-mix(in srgb, var(--rarity-color) 80%, transparent);
+}
+
+.puzzle-combo {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-wider);
+  text-shadow: 0 2px 18px var(--rarity-color);
+}
+
+.puzzle-ring {
+  border: 3px solid var(--rarity-color);
+  border-radius: var(--radius-full);
+  height: 7rem;
+  pointer-events: none;
+  position: absolute;
+  width: 7rem;
+}
+
+/* x10 opening: one chip per booster, colored by its rarity. */
+.puzzle-result__grid {
+  display: grid;
+  gap: 0.4rem;
+  grid-template-columns: repeat(5, 2.1rem);
+}
+
+.puzzle-result__grid span {
+  align-items: center;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.25);
+  color: rgba(0, 0, 0, 0.62);
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: var(--font-bold);
+  height: 2.1rem;
+  justify-content: center;
+}

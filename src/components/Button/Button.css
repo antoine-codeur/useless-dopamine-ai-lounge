@@ -1,0 +1,172 @@
+.button {
+  align-items: center;
+  --button-height: 2.75rem;
+  --button-padding-x: 1rem;
+  --button-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  border-radius: var(--button-radius);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 760;
+  gap: 0.5rem;
+  justify-content: center;
+  min-height: var(--button-height);
+  min-width: 0;
+  padding: 0.72rem var(--button-padding-x);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    color 120ms ease,
+    opacity 120ms ease;
+}
+
+.button[data-size="sm"] {
+  --button-height: 2.15rem;
+  --button-padding-x: 0.68rem;
+  font-size: 0.86rem;
+  padding-bottom: 0.42rem;
+  padding-top: 0.42rem;
+}
+
+.button[data-size="lg"] {
+  --button-height: 3rem;
+  --button-padding-x: 1.15rem;
+}
+
+.button[data-size="icon"] {
+  --button-height: 2.15rem;
+  --button-padding-x: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  width: var(--button-height);
+}
+
+.button__content {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+  justify-content: center;
+  line-height: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.button__content svg {
+  flex: 0 0 auto;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.button--primary {
+  background: var(--gradient-brand);
+  box-shadow: var(--glow-primary);
+  color: #06121a;
+  position: relative;
+  overflow: hidden;
+}
+
+.button--primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--sheen-top);
+  pointer-events: none;
+}
+
+.button--primary:hover:not(:disabled) {
+  box-shadow: var(--glow-primary-strong);
+}
+
+.button--secondary {
+  background: var(--color-surfaceAlt);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.button--ghost {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-mutedText);
+}
+
+.button--danger {
+  background: color-mix(in srgb, var(--color-danger) 12%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-danger) 36%, var(--color-border));
+  color: var(--color-danger);
+}
+
+.button__spinner {
+  animation: spin 800ms linear infinite;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  height: 1rem;
+  width: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.select-control {
+  align-items: center;
+  display: inline-flex;
+  min-width: 8.2rem;
+  position: relative;
+}
+
+.select-control select {
+  appearance: none;
+  background: var(--color-surfaceAlt);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  height: 2.35rem;
+  line-height: 1;
+  min-width: 0;
+  padding: 0 2.15rem 0 0.85rem;
+  width: 100%;
+}
+
+.select-control[data-size="sm"] {
+  min-width: 7.7rem;
+}
+
+.select-control[data-size="sm"] select {
+  height: 2.15rem;
+  padding-left: 0.75rem;
+  padding-right: 2rem;
+}
+
+.select-control svg {
+  color: var(--color-mutedText);
+  pointer-events: none;
+  position: absolute;
+  right: 0.66rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.select-control select:hover {
+  border-color: var(--color-border);
+}
+
+.select-control select:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.select-control select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}

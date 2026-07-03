@@ -1,0 +1,205 @@
+.season-panel {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.season-hero {
+  align-items: center;
+  background: var(--gradient-brand-soft);
+  border: 1px solid var(--border-brand);
+  border-radius: var(--radius-2xl);
+  display: grid;
+  gap: 0.6rem 1rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 1rem 1.15rem;
+}
+
+.season-hero__level {
+  align-items: center;
+  background: var(--gradient-brand);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glow-primary);
+  color: #06121a;
+  display: grid;
+  gap: 0;
+  height: 4rem;
+  justify-items: center;
+  padding: 0.4rem 0.9rem;
+}
+
+.season-hero__level strong {
+  font-size: 1.35rem;
+  font-weight: var(--font-bold);
+  line-height: 1;
+}
+
+.season-hero__level span {
+  font-size: 0.62rem;
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+}
+
+.season-hero__meta {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.season-hero__meta p {
+  font-size: 0.8rem;
+}
+
+.season-hero__bar {
+  background: color-mix(in srgb, var(--color-border) 55%, transparent);
+  border-radius: var(--radius-full);
+  height: 1.15rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.season-hero__bar > span {
+  background: var(--gradient-brand);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  transition: width 0.5s var(--ease-out);
+}
+
+.season-hero__bar small {
+  color: var(--color-text);
+  font-size: 0.68rem;
+  font-weight: var(--font-bold);
+  inset: 0;
+  line-height: 1.15rem;
+  position: absolute;
+  text-align: center;
+}
+
+.season-hero__checkin {
+  align-items: end;
+  display: grid;
+  gap: 0.4rem;
+  justify-items: end;
+}
+
+.season-streak {
+  align-items: center;
+  color: var(--color-mutedText);
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: var(--font-semibold);
+  gap: 0.3rem;
+}
+
+.season-streak[data-hot] {
+  color: var(--color-secondary);
+}
+
+.season-upsell {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-warning) 8%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-warning) 35%, var(--color-border));
+  border-radius: var(--radius-2xl);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.8rem;
+  padding: 0.75rem 1rem;
+}
+
+.season-upsell svg {
+  color: var(--color-warning);
+}
+
+.season-upsell p {
+  flex: 1;
+  font-size: 0.85rem;
+  min-width: 12rem;
+}
+
+/* ---- Tier track ---- */
+.season-track {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr));
+}
+
+.season-tier {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: 0.35rem;
+  opacity: 0.62;
+  padding: 0.5rem;
+  transition: opacity var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-out);
+}
+
+.season-tier[data-reached] {
+  border-color: var(--border-brand);
+  opacity: 1;
+}
+
+.season-tier[data-reached]:hover {
+  transform: translateY(-2px);
+}
+
+.season-tier header {
+  color: var(--color-mutedText);
+  font-size: 0.7rem;
+  font-weight: var(--font-bold);
+  text-align: center;
+}
+
+.season-tier[data-reached] header {
+  color: var(--color-primary);
+}
+
+.season-reward {
+  align-items: center;
+  background: var(--color-surfaceAlt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: var(--font-bold);
+  gap: 0.25rem;
+  justify-content: center;
+  padding: 0.3rem 0.3rem;
+  transition: var(--transition-colors);
+}
+
+.season-reward:not(:disabled):hover {
+  border-color: var(--border-brand);
+  color: var(--color-primary);
+}
+
+.season-reward:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.season-reward[data-claimed] {
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+  color: var(--color-success);
+  opacity: 1;
+}
+
+.season-reward--premium {
+  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-surfaceAlt));
+  border-color: color-mix(in srgb, var(--color-warning) 30%, var(--color-border));
+}
+
+@media (max-width: 760px) {
+  .season-hero {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .season-hero__checkin {
+    grid-column: 1 / -1;
+    justify-items: stretch;
+  }
+}

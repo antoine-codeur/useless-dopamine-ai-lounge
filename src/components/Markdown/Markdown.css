@@ -1,0 +1,208 @@
+.markdown {
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  font-weight: var(--font-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-snug);
+  margin: 1.1em 0 0.45em;
+}
+
+.markdown h1 {
+  font-size: var(--text-xl);
+}
+
+.markdown h2 {
+  font-size: var(--text-lg);
+}
+
+.markdown h3,
+.markdown h4 {
+  font-size: var(--text-base);
+}
+
+.markdown p {
+  margin: 0.55em 0;
+}
+
+.markdown ul,
+.markdown ol {
+  margin: 0.55em 0;
+  padding-left: 1.35em;
+}
+
+.markdown li + li {
+  margin-top: 0.25em;
+}
+
+.markdown a {
+  color: var(--color-primary);
+  font-weight: var(--font-medium);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown code {
+  background: color-mix(in srgb, var(--color-surfaceAlt) 85%, var(--color-primary));
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  padding: 0.1em 0.35em;
+}
+
+.markdown pre {
+  background: var(--color-surfaceAlt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin: 0.7em 0;
+  overflow-x: auto;
+  padding: var(--space-3);
+}
+
+.markdown pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.markdown blockquote {
+  border-left: 3px solid var(--border-brand);
+  color: var(--color-mutedText);
+  margin: 0.7em 0;
+  padding: 0.1em 0 0.1em 0.85em;
+}
+
+.markdown img {
+  border-radius: var(--radius-lg);
+  display: block;
+  margin: 0.7em 0;
+  max-height: 16rem;
+  max-width: 100%;
+}
+
+.markdown hr {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  margin: 1em 0;
+}
+
+/* Table + its own export toolbar: a normal flow row glued above the table
+   (one contiguous hover zone), never wrapping — small tables simply grow the
+   wrapper to fit it. Always faintly visible; full opacity on hover. */
+.markdown-table {
+  margin: 0.8em 0;
+  max-width: 100%;
+  min-width: min(max-content, 100%);
+  width: fit-content;
+}
+
+.markdown-table__tools {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  justify-content: flex-start;
+  margin-bottom: 0.3rem;
+  opacity: 0.5;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+  white-space: nowrap;
+}
+
+.markdown-table:hover .markdown-table__tools,
+.markdown-table__tools:hover,
+.markdown-table:focus-within .markdown-table__tools {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .markdown-table__tools {
+    opacity: 1;
+  }
+}
+
+.markdown-table__tools button {
+  align-items: center;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-mutedText);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: var(--font-semibold);
+  gap: 0.25rem;
+  padding: 0.14rem 0.5rem;
+  transition: var(--transition-colors);
+}
+
+.markdown-table__tools button:hover {
+  border-color: var(--border-brand);
+  color: var(--color-text);
+}
+
+.markdown-table__tools button small {
+  font-size: 0.62rem;
+}
+
+/* Modern data tables: rounded card, hairline rows, subtle zebra, row hover. */
+.markdown table {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-collapse: separate;
+  border-radius: var(--radius-lg);
+  border-spacing: 0;
+  box-shadow: var(--shadow-xs);
+  display: block;
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  overflow-x: auto;
+  width: max-content;
+}
+
+.markdown th,
+.markdown td {
+  border: 0;
+  padding: 0.5em 0.85em;
+  text-align: left;
+}
+
+.markdown th {
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-mutedText);
+  font-size: 0.72em;
+  font-weight: var(--font-semibold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.markdown td {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+.markdown tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.markdown tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--color-surfaceAlt) 45%, transparent);
+}
+
+.markdown tbody tr:hover td {
+  background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+}

@@ -1,0 +1,14 @@
+.floating-tooltip {
+  background: color-mix(in srgb, var(--color-text) 92%, black);
+  border-radius: var(--radius-md);
+  color: var(--color-background);
+  font-size: 0.72rem;
+  font-weight: 650;
+  max-width: 16rem;
+  padding: 0.4rem 0.55rem;
+  pointer-events: none;
+  position: fixed;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: var(--z-tooltip);
+}

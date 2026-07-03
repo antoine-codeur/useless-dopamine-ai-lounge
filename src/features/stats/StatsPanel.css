@@ -1,0 +1,219 @@
+.stats-card {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.stats-card h4 {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 0.3rem;
+}
+
+.stats-card h4 svg {
+  color: var(--color-primary);
+}
+
+.stats-bar {
+  align-items: center;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+}
+
+.stats-bar__label {
+  color: var(--color-mutedText);
+  font-size: 0.84rem;
+  text-transform: capitalize;
+}
+
+.stats-bar__track {
+  background: color-mix(in srgb, var(--color-border) 60%, var(--color-surface));
+  border-radius: var(--radius-full);
+  display: block;
+  height: 0.7rem;
+  overflow: hidden;
+}
+
+.stats-bar__track > span {
+  background: var(--gradient-brand);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+.stats-bar strong {
+  font-size: 0.82rem;
+}
+
+.stats-region summary {
+  align-items: center;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  list-style: none;
+  padding: 0.35rem 0.45rem;
+}
+
+.stats-region summary::-webkit-details-marker {
+  display: none;
+}
+
+.stats-region summary:hover {
+  background: var(--color-surfaceAlt);
+}
+
+.stats-region summary span {
+  color: var(--color-mutedText);
+  font-size: 0.8rem;
+}
+
+.stats-region__list {
+  border-left: 2px solid var(--color-border);
+  display: grid;
+  gap: 0.15rem;
+  margin: 0.25rem 0 0.45rem 0.6rem;
+  padding-left: 0.6rem;
+}
+
+.stats-counter-grid {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+}
+
+.stats-counter {
+  background: var(--color-surfaceAlt);
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.6rem 0.7rem;
+}
+
+.stats-counter strong {
+  font-size: var(--text-lg);
+  letter-spacing: var(--tracking-tight);
+}
+
+.stats-counter span {
+  color: var(--color-mutedText);
+  font-size: 0.76rem;
+}
+
+.stats-footnote {
+  align-items: center;
+  display: inline-flex;
+  font-size: 0.8rem;
+  gap: 0.35rem;
+}
+
+/* ---- Credit ledger & purchase history ---- */
+.ledger-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.ledger-total {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 28%, transparent);
+  border-radius: var(--radius-full);
+  color: var(--color-success);
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: var(--font-semibold);
+  gap: 0.28rem;
+  padding: 0.14rem 0.55rem;
+}
+
+.ledger-total[data-negative] {
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  border-color: color-mix(in srgb, var(--color-danger) 24%, transparent);
+  color: var(--color-danger);
+}
+
+.ledger-list {
+  display: grid;
+  max-height: 21rem;
+  overflow-y: auto;
+}
+
+.ledger-row {
+  align-items: center;
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  padding: 0.32rem 0;
+}
+
+.ledger-row + .ledger-row {
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+}
+
+.ledger-row[data-refunded] .ledger-row__reason {
+  text-decoration: line-through;
+}
+
+.ledger-row__icon {
+  align-items: center;
+  color: var(--color-mutedText);
+  display: inline-flex;
+}
+
+.ledger-row__reason {
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledger-row__when {
+  color: var(--color-mutedText);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.ledger-row__delta {
+  color: var(--color-success);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ledger-row__delta[data-negative] {
+  color: var(--color-danger);
+}
+
+.ledger-row__status {
+  color: var(--color-mutedText);
+  font-size: 0.72rem;
+  font-weight: var(--font-semibold);
+}
+
+.stats-card .ledger-row { grid-template-columns: auto minmax(0, 1fr) auto auto auto; }
+.stats-card .ledger-list .ledger-row { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+
+.refund-pill {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 26%, transparent);
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  display: inline-flex;
+  font-size: 0.68rem;
+  font-weight: var(--font-bold);
+  gap: 0.25rem;
+  margin-left: auto;
+  padding: 0.12rem 0.5rem;
+}
+
+.refund-pill[data-empty] {
+  background: color-mix(in srgb, var(--color-mutedText) 10%, transparent);
+  border-color: var(--color-border);
+  color: var(--color-mutedText);
+}

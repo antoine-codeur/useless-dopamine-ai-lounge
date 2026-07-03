@@ -1,0 +1,33 @@
+/**
+ * Layout tokens — stacking order and shared control sizing.
+ *
+ * The z-index scale is the single source of truth for stacking. Never write a
+ * raw z-index in component CSS: every layer above the base belongs to one of
+ * these named tiers so overlays, modals, and tooltips never fight.
+ *
+ * Breakpoints are documented for reference — CSS custom properties can't be
+ * used inside @media queries, so mirror these values when writing one.
+ *   sm 640px · md 768px · lg 1024px · xl 1280px
+ */
+:root {
+  /* Stacking order */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-dropdown: 1000;
+  --z-overlay: 1200;
+  --z-modal: 1300;
+  --z-popover: 1400;
+  --z-toast: 1450;
+  --z-tooltip: 1500;
+
+  /* Control heights — shared by buttons, inputs, and selects. */
+  --control-height-sm: 32px;
+  --control-height-md: 40px;
+  --control-height-lg: 48px;
+
+  /* App shell bounds */
+  --sidebar-width-min: 220px;
+  --sidebar-width-max: 420px;
+  --sidebar-width-collapsed: 56px;
+}

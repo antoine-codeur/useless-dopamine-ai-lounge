@@ -1,0 +1,104 @@
+/* Token foundation must load first so every rule below can consume it. */
+@import "./tokens/index.css";
+
+:root {
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-synthesis: none;
+  line-height: var(--leading-normal);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Touch base: kill the ~300ms double-tap-zoom delay so taps register instantly,
+   and drop the default grey tap flash (components own their :active feedback). */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+label,
+select,
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+[role="switch"],
+[role="option"] {
+  touch-action: manipulation;
+}
+
+body {
+  height: 100dvh;
+  margin: 0;
+  min-width: 320px;
+  overflow: hidden;
+}
+
+#root {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+  outline: none;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  box-shadow: var(--ring-focus);
+}
+
+/* Touch has no hover, so most controls give no press feedback. A light active
+   dim confirms every tap landed — only where a fine pointer is unavailable. */
+@media (hover: none) {
+  button:active:not(:disabled),
+  a:active,
+  [role="button"]:active,
+  [role="tab"]:active,
+  [role="menuitem"]:active,
+  [role="option"]:active {
+    opacity: 0.68;
+  }
+}
+
+/* Translucent brand tint keeps selected text readable on every theme. */
+::selection {
+  background: color-mix(in srgb, var(--color-primary) 32%, transparent);
+}
+
+/* Themed scrollbars everywhere — no scroller escapes the theme. */
+:root {
+  scrollbar-color: color-mix(in srgb, var(--color-mutedText) 32%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  height: 0.5rem;
+  width: 0.5rem;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-mutedText) 30%, transparent);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-mutedText) 46%, transparent);
+}

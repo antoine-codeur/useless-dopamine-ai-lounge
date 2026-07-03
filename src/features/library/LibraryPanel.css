@@ -1,0 +1,101 @@
+.library-section {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.library-section__header {
+  align-items: center;
+  color: var(--color-text);
+  display: flex;
+  gap: 0.45rem;
+}
+
+.library-section__header svg {
+  color: var(--color-primary);
+}
+
+.library-section__header h4 {
+  font-size: var(--text-base);
+  margin: 0;
+}
+
+.library-section__header span {
+  background: var(--color-surfaceAlt);
+  border-radius: var(--radius-full);
+  color: var(--color-mutedText);
+  font-size: 0.72rem;
+  font-weight: var(--font-semibold);
+  padding: 0.05rem 0.5rem;
+}
+
+.library-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+}
+
+.library-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  display: grid;
+  position: relative;
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.library-card:hover {
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.library-card__open {
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  text-align: left;
+}
+
+.library-card__open strong {
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-snug);
+  padding-right: 1.5rem;
+}
+
+.library-card__open p {
+  color: var(--color-mutedText);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.library-card__open small {
+  color: var(--color-mutedText);
+  font-size: 0.72rem;
+}
+
+.library-card__remove {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-mutedText);
+  cursor: pointer;
+  display: inline-flex;
+  height: 1.8rem;
+  justify-content: center;
+  position: absolute;
+  right: 0.5rem;
+  top: 0.55rem;
+  width: 1.8rem;
+}
+
+.library-card__remove:hover {
+  background: var(--color-surfaceAlt);
+  color: var(--color-danger);
+}

@@ -1,0 +1,15 @@
+.confirm-card {
+  max-width: 24rem;
+}
+
+.confirm-card h2 {
+  font-size: var(--text-lg);
+  margin: 0;
+}
+
+.confirm-card footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}

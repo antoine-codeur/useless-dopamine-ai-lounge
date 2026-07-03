@@ -1,0 +1,39 @@
+/**
+ * Gradient & glow tokens — the "visual sugar" layer.
+ *
+ * These reference the runtime --color-* variables (injected per theme by
+ * ThemeProvider), so every gradient and glow re-tints automatically when the
+ * theme changes. Use them for hero surfaces, primary actions, and any element
+ * that should feel juicy/dopamine rather than flat.
+ */
+:root {
+  /* Brand gradients — primary -> secondary. */
+  --gradient-brand: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  --gradient-brand-vivid: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 92%, #fff),
+    var(--color-primary) 45%,
+    var(--color-secondary)
+  );
+  --gradient-brand-soft: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 20%, var(--color-surface)),
+    color-mix(in srgb, var(--color-secondary) 20%, var(--color-surface))
+  );
+
+  /* Ambient page wash — soft colored light from two corners. */
+  --gradient-app:
+    radial-gradient(1100px 620px at 12% -12%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 60%),
+    radial-gradient(900px 520px at 108% 4%, color-mix(in srgb, var(--color-secondary) 12%, transparent), transparent 55%);
+
+  /* Top sheen overlay for cards/buttons (glass highlight). */
+  --sheen-top: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 42%);
+
+  /* Colored glows for elevated/active elements. */
+  --glow-primary: 0 8px 26px color-mix(in srgb, var(--color-primary) 42%, transparent);
+  --glow-primary-strong: 0 12px 40px color-mix(in srgb, var(--color-primary) 58%, transparent);
+  --glow-secondary: 0 8px 26px color-mix(in srgb, var(--color-secondary) 40%, transparent);
+
+  /* Tinted hairline that picks up the brand hue on hover/active. */
+  --border-brand: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+}

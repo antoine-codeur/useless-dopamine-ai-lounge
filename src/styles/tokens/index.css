@@ -1,0 +1,16 @@
+/**
+ * Design token foundation.
+ *
+ * Static, theme-independent design primitives. The color tokens (--color-*)
+ * are the one exception: they are injected at runtime by ThemeProvider so they
+ * can swap per theme/mode, and therefore live in the theme layer, not here.
+ *
+ * Import order is intentional: elevation and motion reference other tokens.
+ */
+@import "./spacing.css";
+@import "./radius.css";
+@import "./typography.css";
+@import "./elevation.css";
+@import "./gradients.css";
+@import "./motion.css";
+@import "./layout.css";

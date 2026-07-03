@@ -1,0 +1,102 @@
+.mode-menu {
+  display: inline-flex;
+  position: relative;
+}
+
+.mode-menu__popover {
+  animation: mode-menu-pop var(--duration-fast) var(--ease-out);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  bottom: calc(100% + 0.4rem);
+  box-shadow: var(--shadow-lg);
+  display: grid;
+  gap: 2px;
+  left: 0;
+  min-width: 13.5rem;
+  padding: 0.3rem;
+  position: absolute;
+  z-index: var(--z-dropdown);
+}
+
+@keyframes mode-menu-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mode-menu__popover button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: var(--text-sm);
+  gap: 0.5rem;
+  min-height: 2rem;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  width: 100%;
+}
+
+.mode-menu__popover button:hover {
+  background: var(--color-surfaceAlt);
+}
+
+.mode-menu__popover button[data-active="true"] {
+  background: var(--gradient-brand-soft);
+  box-shadow: inset 0 0 0 1px var(--border-brand);
+  font-weight: var(--font-semibold);
+}
+
+.mode-menu__popover button svg:first-child {
+  color: var(--color-mutedText);
+}
+
+.mode-menu__popover button[data-active="true"] svg:first-child {
+  color: var(--color-primary);
+}
+
+.mode-menu__check {
+  color: var(--color-primary);
+  margin-left: auto;
+}
+
+.mode-menu__divider {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  margin: 0.2rem 0.3rem;
+}
+
+.mode-menu__popover button[data-locked="true"] {
+  color: var(--color-mutedText);
+}
+
+.mode-menu__lock {
+  align-items: center;
+  color: var(--color-warning);
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: var(--font-semibold);
+  gap: 0.2rem;
+  margin-left: auto;
+}
+
+.mode-menu__persona {
+  display: grid;
+  line-height: 1.25;
+}
+
+.mode-menu__persona small {
+  color: var(--color-mutedText);
+  font-size: 0.7rem;
+}

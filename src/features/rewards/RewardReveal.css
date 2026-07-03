@@ -1,0 +1,64 @@
+.reward-backdrop {
+  align-items: center;
+  backdrop-filter: blur(6px);
+  background: color-mix(in srgb, #060913 58%, transparent);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: var(--z-popover);
+}
+
+.reward-stage {
+  display: grid;
+  gap: var(--space-6);
+  justify-items: center;
+  padding: var(--space-8);
+}
+
+.reward-orb-area {
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.reward-orb {
+  align-items: center;
+  background: var(--gradient-brand-vivid);
+  border-radius: var(--radius-full);
+  box-shadow: var(--glow-primary-strong);
+  color: #06121a;
+  display: flex;
+  height: 6rem;
+  justify-content: center;
+  width: 6rem;
+}
+
+.reward-particle {
+  border-radius: var(--radius-full);
+  height: 10px;
+  pointer-events: none;
+  position: absolute;
+  width: 10px;
+}
+
+.reward-result {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
+  text-align: center;
+}
+
+.reward-amount {
+  color: #ffffff;
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-tight);
+  text-shadow: 0 4px 34px var(--color-glow);
+}
+
+.reward-title {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: var(--text-base);
+  margin-bottom: var(--space-2);
+}

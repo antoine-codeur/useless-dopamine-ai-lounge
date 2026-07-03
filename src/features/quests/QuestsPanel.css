@@ -1,0 +1,287 @@
+.quests-hero {
+  align-items: center;
+  background: var(--gradient-brand-soft);
+  border: 1px solid var(--border-brand);
+  border-radius: var(--radius-2xl);
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.15rem;
+}
+
+.quests-hero__medal {
+  align-items: center;
+  background: var(--gradient-brand);
+  border-radius: var(--radius-full);
+  box-shadow: var(--glow-primary);
+  color: #06121a;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 3.2rem;
+  justify-content: center;
+  width: 3.2rem;
+}
+
+.quests-hero__meta {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.quests-hero__track {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-border) 60%, var(--color-surface));
+  border-radius: var(--radius-full);
+  display: flex;
+  height: 1.1rem;
+  margin-top: 0.2rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.quests-hero__track > span {
+  background: var(--gradient-brand);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+.quests-hero__track strong {
+  color: var(--color-text);
+  font-size: 0.72rem;
+  position: absolute;
+  right: 0.6rem;
+}
+
+.quests-hero__pool {
+  align-items: center;
+  color: var(--color-mutedText);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  font-weight: var(--font-semibold);
+  gap: 0.3rem;
+}
+
+.quests-hero__pool svg {
+  color: var(--color-warning);
+}
+
+.quest-board {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.quest-tile {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 0.95rem 1.05rem;
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.quest-tile:hover {
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.quest-tile__medal {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surfaceAlt));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  display: inline-flex;
+  height: 2.6rem;
+  justify-content: center;
+  width: 2.6rem;
+}
+
+.quest-tile[data-complete="true"] .quest-tile__medal {
+  background: var(--gradient-brand);
+  border: 0;
+  color: #06121a;
+}
+
+.quest-tile__body {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.quest-tile__body header {
+  align-items: baseline;
+  display: flex;
+  gap: 0.55rem;
+  justify-content: space-between;
+}
+
+.quest-tile__reward {
+  color: var(--color-warning);
+  font-size: 0.78rem;
+  font-weight: var(--font-bold);
+  white-space: nowrap;
+}
+
+.quest-tile__body p {
+  color: var(--color-mutedText);
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.quest-tile__track {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-border) 60%, var(--color-surface));
+  border-radius: var(--radius-full);
+  display: flex;
+  height: 0.9rem;
+  margin-top: 0.15rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.quest-tile__track > span {
+  background: var(--gradient-brand);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+.quest-tile__track small {
+  color: var(--color-text);
+  font-size: 0.66rem;
+  font-weight: var(--font-semibold);
+  position: absolute;
+  right: 0.5rem;
+}
+
+.quest-tile__claim {
+  min-width: 6.2rem;
+}
+
+@media (max-width: 760px) {
+  .quests-hero {
+    flex-wrap: wrap;
+  }
+
+  .quest-tile {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .quest-tile__claim {
+    grid-column: 2;
+    justify-self: end;
+  }
+}
+
+/* --- Quest board v2 -------------------------------------------------------- */
+.quest-section {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.quest-section__title {
+  font-size: var(--text-base);
+  margin: 0;
+}
+
+.quest-filters {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.quest-search {
+  align-items: center;
+  background: var(--color-surfaceAlt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-mutedText);
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.1rem 0.65rem;
+}
+
+.quest-search input {
+  background: transparent;
+  border: 0;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.84rem;
+  min-height: 1.7rem;
+  padding: 0;
+  width: 9rem;
+}
+
+.quest-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.quest-categories button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  color: var(--color-mutedText);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: var(--font-medium);
+  padding: 0.2rem 0.65rem;
+  transition: var(--transition-colors);
+}
+
+.quest-categories button:hover {
+  background: var(--color-surfaceAlt);
+  color: var(--color-text);
+}
+
+.quest-categories button[data-active="true"] {
+  background: var(--gradient-brand-soft);
+  border-color: var(--border-brand);
+  color: var(--color-text);
+  font-weight: var(--font-semibold);
+}
+
+.quest-tile[data-ready="true"] {
+  border-color: var(--border-brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.quest-tile__tier {
+  color: var(--color-mutedText);
+  font-size: 0.74rem;
+}
+
+/* Landing from a quest toast: a short brand pulse marks the exact quest. */
+.quest-tile[data-focus] {
+  animation: quest-focus-pulse 0.9s var(--ease-out) 2;
+  border-color: var(--border-brand);
+}
+
+@keyframes quest-focus-pulse {
+  0%, 100% {
+    box-shadow: none;
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 30%, transparent), var(--glow-primary);
+  }
+}
+
+.quest-tile__reward {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.15rem;
+}

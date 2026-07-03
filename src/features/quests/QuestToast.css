@@ -1,0 +1,93 @@
+.quest-toast {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  box-shadow: var(--shadow-lg);
+  /* A <button> keeps the UA's black otherwise — unreadable in dark mode. */
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 0.55rem;
+  left: 1rem;
+  padding: 0.45rem 0.9rem 0.45rem 0.5rem;
+  position: fixed;
+  text-align: left;
+  transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+  z-index: var(--z-toast);
+}
+
+.quest-toast:hover {
+  border-color: var(--border-brand);
+  box-shadow: var(--shadow-xl);
+}
+
+.quest-toast[data-done] {
+  border-color: color-mix(in srgb, var(--color-success) 45%, var(--color-border));
+}
+
+.quest-toast__ring-wrap {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+}
+
+.quest-toast__ring {
+  grid-area: 1 / 1;
+  height: 2.2rem;
+  transform: rotate(-90deg);
+  width: 2.2rem;
+}
+
+.quest-toast__ring circle {
+  fill: none;
+  stroke-width: 4;
+}
+
+.quest-toast__ring-track {
+  stroke: color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.quest-toast__ring-fill {
+  stroke-linecap: round;
+}
+
+.quest-toast__ring-center {
+  align-items: center;
+  color: var(--color-mutedText);
+  display: inline-flex;
+  grid-area: 1 / 1;
+  justify-content: center;
+}
+
+.quest-toast[data-done] .quest-toast__ring-center {
+  color: var(--color-success);
+}
+
+.quest-toast__body {
+  display: grid;
+  gap: 0.05rem;
+}
+
+.quest-toast__body strong {
+  font-size: 0.82rem;
+}
+
+.quest-toast__progress {
+  color: var(--color-mutedText);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-semibold);
+}
+
+.quest-toast[data-done] .quest-toast__progress {
+  color: var(--color-success);
+}
+
+@media (max-width: 760px) {
+  .quest-toast {
+    bottom: calc(4.6rem + env(safe-area-inset-bottom, 0px));
+  }
+}

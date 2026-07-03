@@ -1,0 +1,126 @@
+.credit-combo {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg), 0 0 26px color-mix(in srgb, var(--combo-color) 30%, transparent);
+  display: flex;
+  gap: 0.45rem;
+  left: 50%;
+  padding: 0.45rem 0.9rem 0.45rem 0.8rem;
+  position: fixed;
+  top: 0.9rem;
+  transform: translateX(-50%);
+  z-index: var(--z-tooltip);
+}
+
+.credit-combo__bolt {
+  color: var(--combo-color);
+  filter: drop-shadow(0 0 8px var(--combo-color));
+}
+
+/* The border lives on the TYPE itself — stroked digits, frenzy colors. */
+.credit-combo__amount {
+  -webkit-text-stroke: 1.5px var(--combo-color);
+  color: var(--color-text);
+  font-size: 1.45rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+  paint-order: stroke fill;
+  text-shadow: 0 0 16px color-mix(in srgb, var(--combo-color) 65%, transparent);
+}
+
+.credit-combo__unit {
+  color: var(--color-mutedText);
+  font-size: 0.74rem;
+  font-weight: var(--font-semibold);
+}
+
+.credit-combo__combo {
+  color: var(--combo-color);
+  font-size: 0.78rem;
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-wider);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--combo-color) 60%, transparent);
+}
+
+.credit-combo__jackpot {
+  background: var(--gradient-brand);
+  border-radius: var(--radius-full);
+  box-shadow: var(--glow-primary);
+  color: #06121a;
+  font-size: 0.74rem;
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-wider);
+  padding: 0.15rem 0.55rem;
+}
+
+.credit-combo__ring {
+  height: 1.5rem;
+  transform: rotate(-90deg);
+  width: 1.5rem;
+}
+
+.credit-combo__ring circle {
+  fill: none;
+  stroke-width: 4;
+}
+
+.credit-combo__ring-track {
+  stroke: color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.credit-combo__ring-fill {
+  animation-fill-mode: forwards;
+  animation-name: combo-ring-drain;
+  animation-timing-function: linear;
+  stroke: var(--combo-color);
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+}
+
+@keyframes combo-ring-drain {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: 100;
+  }
+}
+
+/* Phase 2: the combo converts into bonus credits — gradient jackpot pill. */
+.credit-combo--bonus {
+  background: var(--gradient-brand);
+  border: 0;
+  box-shadow: var(--glow-primary-strong);
+}
+
+.credit-combo__bonus-label {
+  color: #06121a;
+  font-size: 0.72rem;
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-wider);
+}
+
+.credit-combo__amount--bonus {
+  -webkit-text-stroke: 1.4px #06121a;
+  color: #ffffff;
+  text-shadow: none;
+}
+
+.credit-combo--bonus .credit-combo__unit {
+  color: color-mix(in srgb, #06121a 65%, transparent);
+}
+
+.credit-combo__ring-fill--bonus {
+  stroke: #06121a;
+}
+
+.credit-combo--bonus .credit-combo__ring-track {
+  stroke: color-mix(in srgb, #ffffff 35%, transparent);
+}
