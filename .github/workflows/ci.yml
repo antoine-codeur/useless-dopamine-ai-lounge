@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Typecheck & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `npm run build` is `tsc && vite build`: this typechecks the whole
+      # frontend (noUnusedLocals/noUnusedParameters are on) and builds it.
+      - name: Typecheck & build frontend
+        run: npm run build
+
+      # The Node backend isn't covered by tsc; parse-check every module so a
+      # syntax error (or a broken split like a missing import) fails CI.
+      - name: Syntax-check backend modules
+        run: node --check backend/lib.mjs && node --check backend/state.mjs && node --check backend/server.mjs

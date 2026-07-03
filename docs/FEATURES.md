@@ -170,7 +170,7 @@ Légende frise : `■` = marche atteinte (S1→S5). **Fini = ■■■■■ uni
 | I5 | Limite invité | bascule vers CTA compte | ■■□□□ S2 |
 | I6 | Refus d'envoi | solde insuffisant → vue Plans | ■■□□□ S2 |
 
-### J. Earn & gamification — 7 features · **le cœur dopamine est le moins fini**
+### J. Earn & gamification — 8 features · **le cœur dopamine est le moins fini**
 
 | # | Feature | Détail | Frise |
 |---|---|---|---|
@@ -178,9 +178,10 @@ Légende frise : `■` = marche atteinte (S1→S5). **Fini = ■■■■■ uni
 | J2 | Quête quotidienne | re-claimable chaque jour | ■■□□□ S2 |
 | J3 | Claim de quête | célébration plein écran (orb, burst, count-up) | ■■■■□ S4 |
 | J4 | Inventaire boosters | compteur disponible | ■■□□□ S2 |
-| J5 | Ouverture de booster | reveal gacha : charge → burst de particules → count-up | ■■■■□ S4 |
+| J5 | Ouverture de booster | reveal gacha : charge → burst de particules → count-up ; **1re ouverture garantie** (hook), RNG crypto ensuite | ■■■■□ S4 |
 | J6 | Cadeau d'anniversaire | 1×/an le jour J, nécessite la date | ■■□□□ S2 |
 | J7 | Cartes guide | comment gagner des crédits | ■■□□□ S2 |
+| J8 | Roue de la fortune quotidienne | tour/jour, RNG serveur pondéré (crédits/booster/XP/dommage), **1er tour garanti +50** ; SVG animé, reduced-motion ; guest = teaser + invite signup | ■■■□□ S3 |
 
 ### K. Activity — 5 features
 

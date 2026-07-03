@@ -1,4 +1,4 @@
-.PHONY: install build type-check deploy status logs stop
+.PHONY: install build type-check deploy status logs stop smoke
 
 COMPOSE      := docker compose
 UDA_PORT     ?= 8094
@@ -24,4 +24,8 @@ logs:
 
 stop:
 	UDA_PORT=$(UDA_PORT) PROTOTYPE_ID=$(PROTOTYPE_ID) $(COMPOSE) down
+
+# Backend security/economy regression against the running deploy.
+smoke:
+	./verify_security.sh
 
