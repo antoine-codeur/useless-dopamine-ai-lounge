@@ -124,6 +124,7 @@
 }
 
 .select-control select {
+  -webkit-appearance: none;
   appearance: none;
   background: var(--color-surfaceAlt);
   border: 1px solid transparent;

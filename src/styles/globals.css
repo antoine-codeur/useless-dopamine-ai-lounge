@@ -54,6 +54,15 @@ textarea {
   outline: none;
 }
 
+/* Cross-platform reset: buttons don't inherit the app font by default (they
+   fall back to the UA control font, esp. on Safari/iOS), and iOS applies native
+   chrome unless appearance is cleared. */
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  font: inherit;
+}
+
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,

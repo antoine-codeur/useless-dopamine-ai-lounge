@@ -1,5 +1,6 @@
 .reward-backdrop {
   align-items: center;
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   background: color-mix(in srgb, #060913 58%, transparent);
   display: flex;

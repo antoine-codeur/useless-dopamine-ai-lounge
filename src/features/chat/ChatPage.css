@@ -1358,6 +1358,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   color: color-mix(in srgb, var(--color-mutedText) 78%, transparent);
   font-size: 0.72rem;
   margin-left: 0.4rem;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -1659,6 +1660,7 @@ textarea::placeholder {
 .modal-backdrop {
   align-items: center;
   background: rgba(10, 10, 12, 0.42);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   display: flex;
   inset: 0;
@@ -1792,6 +1794,7 @@ textarea::placeholder {
 
   .thumb-bar {
     align-items: stretch;
+    -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     background: color-mix(in srgb, var(--color-surface) 90%, transparent);
     border-top: 1px solid var(--color-border);
@@ -2253,6 +2256,7 @@ textarea::placeholder {
 @media (max-width: 760px) {
   /* "Chats" / account in the thumb bar summon the sidebar as a drawer. */
   .mobile-nav-backdrop {
+    -webkit-backdrop-filter: blur(2px);
     backdrop-filter: blur(2px);
     background: rgba(5, 8, 12, 0.55);
     border: 0;
@@ -2325,6 +2329,7 @@ textarea::placeholder {
 
 .drop-overlay {
   align-content: center;
+  -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
   background: color-mix(in srgb, var(--color-background) 72%, transparent);
   border: 2px dashed var(--border-brand);
