@@ -1,0 +1,120 @@
+/* Full-width feature card that hosts the wheel above the earn grid. */
+.earn-card--wheel {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.earn-card--wheel > strong {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.fortune {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0 0.25rem;
+}
+
+.fortune__stage {
+  height: 17rem;
+  position: relative;
+  width: 17rem;
+}
+
+/* The pointer sits fixed at the top, biting into the disc. */
+.fortune__pointer {
+  border-left: 0.6rem solid transparent;
+  border-right: 0.6rem solid transparent;
+  border-top: 1rem solid var(--color-text);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25));
+  left: 50%;
+  position: absolute;
+  top: -0.15rem;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.fortune__disc {
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg), 0 0 0 0.5rem color-mix(in srgb, var(--color-surface) 70%, transparent);
+  display: block;
+  height: 100%;
+  transform-origin: center;
+  /* Long decelerating spin; neutralized by the global reduced-motion guard. */
+  transition: transform 4.2s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+.fortune__slice {
+  stroke: color-mix(in srgb, var(--color-surface) 85%, transparent);
+  stroke-width: 1;
+}
+
+.fortune__slice[data-index="0"] { fill: var(--color-primary); }
+.fortune__slice[data-index="1"] { fill: var(--color-secondary); }
+.fortune__slice[data-index="2"] { fill: var(--color-success); }
+.fortune__slice[data-index="3"] { fill: color-mix(in srgb, var(--color-mutedText) 45%, var(--color-surfaceAlt)); }
+.fortune__slice[data-index="4"] { fill: var(--color-warning); }
+.fortune__slice[data-index="5"] { fill: var(--color-danger); }
+.fortune__slice[data-index="6"] { fill: color-mix(in srgb, var(--color-secondary) 70%, var(--color-primary)); }
+.fortune__slice[data-index="7"] { fill: color-mix(in srgb, var(--color-warning) 65%, var(--color-primary)); }
+
+.fortune__label {
+  fill: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  paint-order: stroke;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.fortune__hub {
+  align-items: center;
+  background: var(--color-surface);
+  border: 0.28rem solid color-mix(in srgb, var(--color-primary) 55%, var(--color-surface));
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  color: var(--color-primary);
+  cursor: pointer;
+  display: flex;
+  font-size: 0.86rem;
+  font-weight: 800;
+  height: 4.6rem;
+  justify-content: center;
+  left: 50%;
+  letter-spacing: 0.04em;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  width: 4.6rem;
+  z-index: 2;
+}
+
+.fortune__hub:hover:not(:disabled) {
+  box-shadow: var(--shadow-lg), 0 0 1.4rem color-mix(in srgb, var(--color-primary) 40%, transparent);
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.fortune__hub:active:not(:disabled) {
+  transform: translate(-50%, -50%) scale(0.96);
+}
+
+.fortune__hub:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.fortune__status {
+  color: var(--color-mutedText);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}

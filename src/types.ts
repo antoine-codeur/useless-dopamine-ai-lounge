@@ -51,6 +51,8 @@ export type Account = {
   boosters: number;
   /** Backend-persisted day (YYYY-MM-DD) of the last daily-booster claim. */
   dailyBoosterDay?: string | null;
+  /** Backend-persisted day (YYYY-MM-DD) of the last fortune-wheel spin. */
+  wheelSpinDay?: string | null;
   promptCount: number;
   createdAt: string;
   avatarDataUrl: string;
