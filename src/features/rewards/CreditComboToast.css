@@ -52,7 +52,7 @@
   background: var(--gradient-brand);
   border-radius: var(--radius-full);
   box-shadow: var(--glow-primary);
-  color: #06121a;
+  color: var(--ink-on-bright);
   font-size: 0.74rem;
   font-weight: var(--font-bold);
   letter-spacing: var(--tracking-wider);
@@ -102,24 +102,24 @@
 }
 
 .credit-combo__bonus-label {
-  color: #06121a;
+  color: var(--ink-on-bright);
   font-size: 0.72rem;
   font-weight: var(--font-bold);
   letter-spacing: var(--tracking-wider);
 }
 
 .credit-combo__amount--bonus {
-  -webkit-text-stroke: 1.4px #06121a;
+  -webkit-text-stroke: 1.4px var(--ink-on-bright);
   color: #ffffff;
   text-shadow: none;
 }
 
 .credit-combo--bonus .credit-combo__unit {
-  color: color-mix(in srgb, #06121a 65%, transparent);
+  color: color-mix(in srgb, var(--ink-on-bright) 65%, transparent);
 }
 
 .credit-combo__ring-fill--bonus {
-  stroke: #06121a;
+  stroke: var(--ink-on-bright);
 }
 
 .credit-combo--bonus .credit-combo__ring-track {

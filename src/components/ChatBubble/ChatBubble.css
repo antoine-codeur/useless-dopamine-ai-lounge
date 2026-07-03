@@ -1,7 +1,7 @@
 .chat-bubble {
   background: transparent;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   box-shadow: none;
   min-width: 0;
   max-width: min(42rem, 92%);
@@ -326,12 +326,12 @@
 .chat-bubble__action--primary {
   background: var(--gradient-brand);
   box-shadow: var(--glow-primary);
-  color: #06121a;
+  color: var(--ink-on-bright);
 }
 
 .chat-bubble__action--primary:hover:not(:disabled) {
   background: var(--gradient-brand);
-  color: #06121a;
+  color: var(--ink-on-bright);
 }
 
 .chat-bubble__pager {
@@ -443,7 +443,7 @@
   align-items: center;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--color-text);
   display: grid;
   gap: 0.5rem;

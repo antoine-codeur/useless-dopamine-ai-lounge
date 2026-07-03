@@ -20,7 +20,7 @@
   background: var(--gradient-brand);
   border-radius: var(--radius-full);
   box-shadow: var(--glow-primary);
-  color: #06121a;
+  color: var(--ink-on-bright);
   display: inline-flex;
   height: 3.4rem;
   justify-content: center;

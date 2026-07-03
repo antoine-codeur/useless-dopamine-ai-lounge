@@ -1,0 +1,8 @@
+/**
+ * Theme-INDEPENDENT colors. Unlike the runtime --color-* palette (swapped per
+ * theme by ThemeProvider), these are fixed regardless of theme/mode — e.g. the
+ * dark "ink" used for text sitting on bright/saturated reward surfaces.
+ */
+:root {
+  --ink-on-bright: #06121a;
+}

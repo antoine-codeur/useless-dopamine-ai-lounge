@@ -7,6 +7,7 @@
  *
  * Import order is intentional: elevation and motion reference other tokens.
  */
+@import "./colors-static.css";
 @import "./spacing.css";
 @import "./radius.css";
 @import "./typography.css";

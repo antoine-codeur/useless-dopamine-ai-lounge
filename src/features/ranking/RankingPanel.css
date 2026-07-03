@@ -30,7 +30,7 @@
 .ranking-periods button[data-active="true"] {
   background: var(--gradient-brand);
   border-color: transparent;
-  color: #06121a;
+  color: var(--ink-on-bright);
 }
 
 /* ---- Podium ---- */

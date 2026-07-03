@@ -14,7 +14,7 @@
   background: var(--gradient-brand);
   border-radius: var(--radius-full);
   box-shadow: var(--glow-primary);
-  color: #06121a;
+  color: var(--ink-on-bright);
   display: inline-flex;
   flex: 0 0 auto;
   height: 3.2rem;
@@ -107,7 +107,7 @@
 .quest-tile[data-complete="true"] .quest-tile__medal {
   background: var(--gradient-brand);
   border: 0;
-  color: #06121a;
+  color: var(--ink-on-bright);
 }
 
 .quest-tile__body {

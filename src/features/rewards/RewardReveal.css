@@ -28,7 +28,7 @@
   background: var(--gradient-brand-vivid);
   border-radius: var(--radius-full);
   box-shadow: var(--glow-primary-strong);
-  color: #06121a;
+  color: var(--ink-on-bright);
   display: flex;
   height: 6rem;
   justify-content: center;

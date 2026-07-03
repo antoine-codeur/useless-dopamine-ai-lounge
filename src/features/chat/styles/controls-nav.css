@@ -3,7 +3,7 @@
   align-items: center;
   background: transparent;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--color-mutedText);
   cursor: pointer;
   display: inline-flex;
@@ -48,7 +48,7 @@
   border: 0;
   border-radius: var(--radius-lg);
   box-shadow: var(--glow-primary);
-  color: #06121a;
+  color: var(--ink-on-bright);
   display: inline-flex;
   justify-content: center;
 }
@@ -95,7 +95,7 @@ h1 {
   align-items: center;
   background: transparent;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--color-text);
   cursor: pointer;
   display: flex;
