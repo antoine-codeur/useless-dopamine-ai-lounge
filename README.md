@@ -1,5 +1,7 @@
 # Useless Dopamine AI Lounge
 
+[![CI](https://github.com/antoine-codeur/useless-dopamine-ai-lounge/actions/workflows/ci.yml/badge.svg)](https://github.com/antoine-codeur/useless-dopamine-ai-lounge/actions/workflows/ci.yml)
+
 A ChatGPT / Claude-style AI chat client with a **dopamine gamification layer** — per-prompt
 credits, paid plans (Free / Pro / Max / Max+), daily quests, boosters, birthday gifts, an
 activity calendar and a file gallery. Guest sessions and real accounts with onboarding.
@@ -66,6 +68,7 @@ npm run tauri dev
 | `make status`       | Show container status                              |
 | `make logs`         | Tail container logs                                |
 | `make stop`         | `docker compose down`                              |
+| `make smoke`        | Backend security/economy regression vs the deploy  |
 | `make build`        | `npm run build` (`tsc && vite build`)              |
 | `make type-check`   | Same as build (typecheck is part of the build)     |
 | `npm run dev`       | Vite dev server                                    |
