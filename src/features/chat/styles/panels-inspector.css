@@ -106,7 +106,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-lg);
   color: var(--color-text);
   display: grid;
   gap: 0.45rem;
@@ -246,7 +246,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+  box-shadow: var(--shadow-xl);
   color: var(--color-text);
   display: grid;
   gap: 1rem;
