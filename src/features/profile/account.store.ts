@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { Account, Plan, Quest } from "../../types";
-import { clearStoredAccountId, storeAccountId } from "../../lib/api";
+import { clearAuthToken } from "../../lib/api";
 
 type AccountStore = {
   account: Account | null;
@@ -16,12 +16,13 @@ export const useAccountStore = create<AccountStore>((set) => ({
   plans: [],
   quests: [],
   setAccount: (account, plans, quests) => {
-    storeAccountId(account.id);
+    // The session token is persisted at login/signup (not here) — setAccount only
+    // mirrors server state, and boot re-auths with the already-stored token.
     set((state) => ({ account, plans: plans ?? state.plans, quests: quests ?? state.quests }));
   },
   setPlans: (plans) => set({ plans }),
   signOut: () => {
-    clearStoredAccountId();
+    clearAuthToken();
     set({ account: null });
   },
 }));

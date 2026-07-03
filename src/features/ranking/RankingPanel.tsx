@@ -70,7 +70,7 @@ export function RankingPanel() {
       {podium.length > 0 ? (
         <div className="ranking-podium">
           {podium.map((row, index) => (
-            <article className="ranking-podium__spot" data-rank={index + 1} data-you={row.you || undefined} key={row.id}>
+            <article className="ranking-podium__spot" data-rank={index + 1} data-you={row.you || undefined} key={row.handle}>
               <Medal size={20} style={{ color: medalColors[index] }} />
               <strong>{row.username}</strong>
               <span className="ranking-handle">@{row.handle} · {planLabels[row.plan] ?? row.plan}</span>
@@ -88,7 +88,7 @@ export function RankingPanel() {
       {rest.length > 0 ? (
         <div className="ranking-list">
           {rest.map((row, index) => (
-            <div className="ranking-row" data-you={row.you || undefined} key={row.id}>
+            <div className="ranking-row" data-you={row.you || undefined} key={row.handle}>
               <span className="ranking-row__rank">#{index + 4}</span>
               <span className="ranking-row__name">
                 <strong>{row.username}</strong>

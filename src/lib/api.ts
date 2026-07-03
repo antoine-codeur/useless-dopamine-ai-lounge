@@ -5,19 +5,20 @@ type ApiResult<T> = T & {
   error?: string;
 };
 
-const accountIdKey = "uda:account-id";
+const authTokenKey = "uda:auth-token";
 const guestIdKey = "uda:guest-id";
 
-export function getStoredAccountId(): string | null {
-  return localStorage.getItem(accountIdKey);
+/** The opaque session token issued at login/signup — the bearer credential. */
+export function getAuthToken(): string | null {
+  return localStorage.getItem(authTokenKey);
 }
 
-export function storeAccountId(accountId: string): void {
-  localStorage.setItem(accountIdKey, accountId);
+export function storeAuthToken(token: string): void {
+  localStorage.setItem(authTokenKey, token);
 }
 
-export function clearStoredAccountId(): void {
-  localStorage.removeItem(accountIdKey);
+export function clearAuthToken(): void {
+  localStorage.removeItem(authTokenKey);
 }
 
 export function getStoredGuestId(): string {
@@ -33,13 +34,13 @@ export function getStoredGuestId(): string {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<ApiResult<T>> {
-  const accountId = getStoredAccountId();
+  const token = getAuthToken();
   const response = await fetch(path, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(accountId ? { Authorization: `Bearer ${accountId}` } : {}),
-      ...(!accountId ? { "X-Guest-Id": getStoredGuestId() } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(!token ? { "X-Guest-Id": getStoredGuestId() } : {}),
       ...(options.headers ?? {}),
     },
   });
@@ -57,14 +58,14 @@ export function loadGuestSession() {
 }
 
 export function createAccount(input: { username?: string; handle?: string; email: string; password: string }) {
-  return request<{ account: Account; plans: Plan[]; quests: Quest[] }>("/api/v1/accounts", {
+  return request<{ token: string; account: Account; plans: Plan[]; quests: Quest[] }>("/api/v1/accounts", {
     method: "POST",
     body: JSON.stringify(input),
   });
 }
 
 export function login(input: { email: string; password: string }) {
-  return request<{ account: Account; plans: Plan[]; quests: Quest[] }>("/api/v1/auth/login", {
+  return request<{ token: string; account: Account; plans: Plan[]; quests: Quest[] }>("/api/v1/auth/login", {
     method: "POST",
     body: JSON.stringify(input),
   });
@@ -128,6 +129,14 @@ export function buyBoosters(count: number) {
   });
 }
 
+export type WheelReward = { kind: "credits" | "booster" | "xp" | "none"; amount: number };
+
+export function spinWheel() {
+  return request<{ segmentId: string; reward: WheelReward; account: Account; plans: Plan[]; quests: Quest[] }>("/api/v1/wheel/spin", {
+    method: "POST",
+  });
+}
+
 export function claimDailyBooster() {
   return request<{ account: Account; plans: Plan[]; quests: Quest[] }>("/api/v1/boosters/daily", {
     method: "POST",
@@ -157,7 +166,6 @@ export function refundSteps(credits: number) {
 export type PeriodSums = { today: number; week: number; month: number; year: number; total: number };
 
 export type LeaderboardRow = {
-  id: string;
   you: boolean;
   username: string;
   handle: string;
