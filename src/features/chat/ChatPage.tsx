@@ -31,17 +31,14 @@ import { prototype } from "../../app/prototype";
 import {
   claimBirthdayGift,
   claimQuest,
-  createAccount,
   deleteAccount,
   getAuthToken,
   loadGuestSession,
   loadSession,
-  login,
   openBooster,
   refundSteps,
   requestAgentResponse,
   requestGuestAgentResponse,
-  storeAuthToken,
   updateAccount,
 } from "../../lib/api";
 import { recordCredit } from "../stats/ledger.store";
@@ -50,7 +47,7 @@ import { SeasonPanel } from "../season/SeasonPanel";
 import { RankingPanel } from "../ranking/RankingPanel";
 import { useSpeechToText } from "./useSpeechToText";
 import { applyAccountResult, useAccountStore } from "../profile/account.store";
-import { isEmail, isHandle, isStrongPassword, isValidOptionalBirthDate } from "../auth/validation";
+import { isHandle, isStrongPassword, isValidOptionalBirthDate } from "../auth/validation";
 import { useShellStore } from "../shell/shell.store";
 import { SettingsPanel } from "../settings/SettingsPanel";
 import { ActivityPanel } from "../activity/ActivityPanel";
@@ -78,6 +75,7 @@ import { Sidebar } from "./Sidebar";
 import { useAvatarEditor } from "./useAvatarEditor";
 import { useThreadMenu } from "./useThreadMenu";
 import { useAttachments } from "./useAttachments";
+import { useAuthFlow } from "./useAuthFlow";
 import { AvatarModal } from "../onboarding/AvatarModal";
 import { isoNow } from "../../lib/date";
 import { FloatingTooltip } from "../../components/FloatingTooltip/FloatingTooltip";
@@ -131,12 +129,22 @@ export function ChatPage() {
   const setView = useShellStore((state) => state.setView);
   const actionMessage = useShellStore((state) => state.actionMessage);
   const setActionMessage = useShellStore((state) => state.setActionMessage);
-  const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
-  const [signup, setSignup] = useState({ email: "", password: "" });
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
-  const [signupError, setSignupError] = useState("");
-  const [authMessage, setAuthMessage] = useState("");
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const {
+    authMode,
+    setAuthMode,
+    signup,
+    setSignup,
+    loginForm,
+    setLoginForm,
+    signupError,
+    authMessage,
+    showAuthModal,
+    setShowAuthModal,
+    signupReady,
+    openAuth,
+    submitSignup,
+    submitLogin,
+  } = useAuthFlow();
   const [guest, setGuest] = useState<GuestSession | null>(null);
   const [profileName, setProfileName] = useState("");
   const [profileHandle, setProfileHandle] = useState("");
@@ -622,7 +630,6 @@ export function ChatPage() {
   const activityStats = computeActivityStats(activeActivity);
   const currentPlan = plans.find((plan) => plan.id === account?.plan);
   const activePlanLabel = account ? currentPlan?.label ?? "Free" : "Guest";
-  const signupReady = isEmail(signup.email) && isStrongPassword(signup.password);
   const passwordReady = isStrongPassword(passwordForm.newPassword);
   const profileNameInvalid = profileName.length > 0 && profileName.trim().length < 2;
   const profileHandleInvalid = profileHandle.length > 0 && !isHandle(profileHandle);
@@ -707,12 +714,6 @@ export function ChatPage() {
     setIsProcessing(false);
   }
 
-  function openAuth(mode: "signup" | "login", message = "") {
-    setAuthMode(mode);
-    setAuthMessage(message);
-    setSignupError("");
-    setShowAuthModal(true);
-  }
 
   function completePromptWord(word: string) {
     setPrompt((value) => value.replace(/([a-zA-Z]{2,})$/, word));
@@ -1174,59 +1175,6 @@ export function ChatPage() {
     finishAiMessage(activeAiMessageId, "Generation stopped. No additional credit was consumed.");
   }
 
-  async function submitSignup(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSignupError("");
-
-    if (!signupReady) {
-      setSignupError("Use a valid email and a password that satisfies every requirement.");
-      return;
-    }
-
-    const result = await createAccount(signup);
-
-    if (!result.ok) {
-      setSignupError(result.error === "email_taken" ? "That email is already in use." : "Account creation failed. Check your email and password.");
-      return;
-    }
-
-    // Persist the session token BEFORE any reload, otherwise the post-reload
-    // boot has no credential and drops the user back into a guest session.
-    storeAuthToken(result.token);
-
-    // Signup carries the guest progress into the new account's bucket.
-    if (switchDataScope(result.account.id, true)) {
-      window.location.reload();
-      return;
-    }
-
-    applyAccountResult(result);
-    setShowAuthModal(false);
-  }
-
-  async function submitLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSignupError("");
-    const result = await login(loginForm);
-
-    if (!result.ok) {
-      setSignupError("Email or password is incorrect.");
-      return;
-    }
-
-    // Persist the session token BEFORE any reload, otherwise the post-reload
-    // boot has no credential and drops the user back into a guest session.
-    storeAuthToken(result.token);
-
-    // Login restores THAT account's own bucket (fresh if first time here).
-    if (switchDataScope(result.account.id)) {
-      window.location.reload();
-      return;
-    }
-
-    applyAccountResult(result);
-    setShowAuthModal(false);
-  }
 
   async function saveOnboardingProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
