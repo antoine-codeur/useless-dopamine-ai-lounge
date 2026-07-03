@@ -153,6 +153,17 @@
   .chat-bubble__actions {
     opacity: 1;
   }
+
+  /* Touch needs ~44px hit areas; the glyph stays small, the tap zone grows. */
+  .chat-bubble__action {
+    height: 2.5rem;
+    min-width: 2.5rem;
+  }
+
+  .chat-bubble__pager button {
+    height: 2.25rem;
+    width: 2.25rem;
+  }
 }
 
 .chat-bubble__actions--user {

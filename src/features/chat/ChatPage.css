@@ -757,17 +757,25 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: flex;
   gap: 0.35rem;
   min-height: 2rem;
+  /* Allow the title to shrink and truncate instead of shoving the topbar
+     actions off-screen on narrow phones with a long (renamable) title. */
+  min-width: 0;
+  overflow: hidden;
   padding: 0 0.35rem;
 }
 
 .conversation-title h2 {
   font-size: 0.98rem;
   font-weight: 720;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .topbar__actions {
   align-items: center;
   display: flex;
+  flex-shrink: 0;
   gap: 0.45rem;
 }
 
@@ -1657,7 +1665,9 @@ textarea::placeholder {
   justify-content: center;
   padding: 1rem;
   position: fixed;
-  z-index: 20;
+  /* Must sit above the mobile thumb-bar (--z-sticky) and dropdowns, or on phones
+     the fixed bottom nav paints over the dialog and steals its taps. */
+  z-index: var(--z-modal);
 }
 
 .auth-modal {

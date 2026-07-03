@@ -10,7 +10,7 @@
   left: 50%;
   padding: 0.45rem 0.9rem 0.45rem 0.8rem;
   position: fixed;
-  top: 0.9rem;
+  top: calc(0.9rem + env(safe-area-inset-top, 0px));
   transform: translateX(-50%);
   z-index: var(--z-tooltip);
 }

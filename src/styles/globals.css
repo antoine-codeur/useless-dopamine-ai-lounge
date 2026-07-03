@@ -74,6 +74,20 @@ textarea:focus-visible {
   }
 }
 
+/* Respect reduced-motion globally. The motion tokens only zero out durations;
+   many looping keyframes (shimmer, pulses, drains, confetti) use literal times,
+   so this catch-all stops them for users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Translucent brand tint keeps selected text readable on every theme. */
 ::selection {
   background: color-mix(in srgb, var(--color-primary) 32%, transparent);
