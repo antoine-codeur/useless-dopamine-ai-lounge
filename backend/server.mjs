@@ -1,6 +1,6 @@
 import http from "node:http";
-import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createHash, randomBytes, randomInt, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
 const port = Number(process.env.PORT ?? 8080);
@@ -20,6 +20,43 @@ const quests = {
   "send-three-prompts": { id: "send-three-prompts", label: "Send three prompts", rewardCredits: 35, repeat: "once" },
 };
 
+/**
+ * Daily fortune wheel. Order + ids MUST stay in sync with the client layout in
+ * src/features/earn/wheel.ts (the client animates the pointer to this segment).
+ * The server owns the weighted draw so the reward can't be tampered with.
+ */
+const WHEEL_SEGMENTS = [
+  { id: "credits-10", kind: "credits", amount: 10, weight: 26 },
+  { id: "booster-1", kind: "booster", amount: 1, weight: 14 },
+  { id: "credits-25", kind: "credits", amount: 25, weight: 20 },
+  { id: "none", kind: "none", amount: 0, weight: 12 },
+  { id: "credits-50", kind: "credits", amount: 50, weight: 10 },
+  { id: "xp-100", kind: "xp", amount: 100, weight: 14 },
+  { id: "booster-2", kind: "booster", amount: 2, weight: 3 },
+  { id: "jackpot-200", kind: "credits", amount: 200, weight: 1 },
+];
+
+/** The very first spin is rigged to a strong, motivating win (the hook). The
+ *  top jackpot stays rare so there's still something to chase afterwards. */
+const WHEEL_FIRST_SPIN_ID = "credits-50";
+
+/** Weighted, crypto-random segment pick (no client influence on the outcome). */
+function pickWheelSegment() {
+  const total = WHEEL_SEGMENTS.reduce((sum, seg) => sum + seg.weight, 0);
+  // randomInt is uniform in [0, total); walk the cumulative weights.
+  let roll = randomInt(total);
+
+  for (const segment of WHEEL_SEGMENTS) {
+    if (roll < segment.weight) {
+      return segment;
+    }
+
+    roll -= segment.weight;
+  }
+
+  return WHEEL_SEGMENTS[0];
+}
+
 async function loadState() {
   try {
     const state = JSON.parse(await readFile(dataFile, "utf8"));
@@ -31,7 +68,68 @@ async function loadState() {
 
 async function saveState(state) {
   await mkdir(dirname(dataFile), { recursive: true });
-  await writeFile(dataFile, JSON.stringify(state, null, 2));
+  // Write to a temp file then atomically rename, so a crash mid-write can never
+  // leave a half-written (corrupt) state file.
+  const tmp = `${dataFile}.${randomUUID()}.tmp`;
+  await writeFile(tmp, JSON.stringify(state, null, 2));
+  await rename(tmp, dataFile);
+}
+
+/**
+ * All requests run through this single promise chain, so the read-modify-write
+ * cycle on the JSON state file can never interleave between requests (no lost
+ * updates / double-spend). Bodies are buffered by nginx upstream, so holding the
+ * lock while reading a request body does not expose a slow-client stall here.
+ */
+let ioChain = Promise.resolve();
+function serialize(task) {
+  const run = ioChain.then(task, task);
+  ioChain = run.then(() => undefined, () => undefined);
+  return run;
+}
+
+/** Opaque session tokens: the account id is NOT a credential and may be public. */
+function newSessionToken() {
+  return randomBytes(32).toString("hex");
+}
+
+function hashToken(token) {
+  return createHash("sha256").update(String(token)).digest("hex");
+}
+
+/** A plan's monthly allotment doubles as the hard ceiling on a balance. */
+function allotmentFor(plan) {
+  return plans[plan]?.monthlyCredits ?? plans.free.monthlyCredits;
+}
+
+/** Refill the monthly credits once the renewal date has passed. */
+function applyRenewal(account) {
+  const renewsAt = account.planRenewsAt;
+
+  if (!renewsAt || todayKey() < renewsAt) {
+    return false;
+  }
+
+  account.creditsRemaining = allotmentFor(account.plan);
+  account.planRenewsAt = renewalDateForCycle(account.planBillingCycle ?? "monthly");
+  return true;
+}
+
+/** Tiny in-memory per-IP throttle for auth endpoints (brute force / spam). */
+const authHits = new Map();
+function rateLimited(request, bucket, max, windowMs = 15 * 60 * 1000) {
+  const ip = String(request.headers["x-forwarded-for"] ?? "").split(",")[0].trim() || request.socket.remoteAddress || "unknown";
+  const key = `${bucket}:${ip}`;
+  const now = Date.now();
+  const entry = authHits.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    authHits.set(key, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+
+  entry.count += 1;
+  return entry.count > max;
 }
 
 function sendJson(response, statusCode, payload) {
@@ -42,10 +140,20 @@ function sendJson(response, statusCode, payload) {
   response.end(JSON.stringify(payload));
 }
 
-async function readJson(request) {
+async function readJson(request, limitBytes = 2_000_000) {
   const chunks = [];
+  let size = 0;
 
   for await (const chunk of request) {
+    size += chunk.length;
+
+    // Bound memory: avatar data-urls cap at 700 KB, so 2 MB is generous. Past
+    // that, stop buffering and drop the body rather than risk OOM.
+    if (size > limitBytes) {
+      request.destroy();
+      return {};
+    }
+
     chunks.push(chunk);
   }
 
@@ -94,7 +202,7 @@ function verifyPassword(password, storedHash = "") {
   return original.length === candidate.length && timingSafeEqual(original, candidate);
 }
 
-function accountIdFromRequest(request) {
+function tokenFromRequest(request) {
   const auth = request.headers.authorization ?? "";
   return auth.startsWith("Bearer ") ? auth.slice(7) : "";
 }
@@ -187,6 +295,7 @@ function publicAccount(account) {
     creditsUsed: account.creditsUsed,
     boosters: account.boosters ?? 0,
     dailyBoosterDay: account.dailyBoosterDay ?? null,
+    wheelSpinDay: account.wheelSpinDay ?? null,
     promptCount: account.promptCount ?? 0,
     createdAt: account.createdAt,
     avatarDataUrl: account.avatarDataUrl ?? "",
@@ -250,7 +359,13 @@ function canClaimQuest(account, questId) {
 
 async function findAccount(request) {
   const state = await loadState();
-  const account = state.accounts.find((item) => item.id === accountIdFromRequest(request) && !item.deletedAt);
+  const tokenHash = hashToken(tokenFromRequest(request));
+  const account = state.accounts.find((item) => item.tokenHash && item.tokenHash === tokenHash && !item.deletedAt);
+
+  if (account && applyRenewal(account)) {
+    await saveState(state);
+  }
+
   return { state, account };
 }
 
@@ -320,7 +435,7 @@ async function findOrCreateGuest(request) {
   return { state, guest };
 }
 
-const server = http.createServer(async (request, response) => {
+async function handleRequest(request, response) {
   const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
 
   if (request.method === "GET" && url.pathname === "/api/v1/health") {
@@ -351,6 +466,11 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (request.method === "POST" && url.pathname === "/api/v1/accounts") {
+    if (rateLimited(request, "signup", 5)) {
+      sendJson(response, 429, { ok: false, error: "too_many_attempts", plans: Object.values(plans), quests: Object.values(quests) });
+      return;
+    }
+
     const body = await readJson(request);
     const email = normalizeEmail(body.email);
     const password = String(body.password ?? "");
@@ -372,12 +492,14 @@ const server = http.createServer(async (request, response) => {
     const requestedHandle = normalizeHandle(body.handle) || handleFromEmail(email);
     const handle = uniqueHandle(state, requestedHandle);
     const now = new Date().toISOString();
+    const sessionToken = newSessionToken();
     const account = {
       id: randomUUID(),
       username,
       handle,
       email,
       passwordHash: hashPassword(password),
+      tokenHash: hashToken(sessionToken),
       plan: "free",
       planBillingCycle: "monthly",
       planRenewsAt: renewalDateForCycle("monthly"),
@@ -405,21 +527,33 @@ const server = http.createServer(async (request, response) => {
     state.accounts.push(account);
     state.messages[account.id] = [];
     await saveState(state);
-    sendJson(response, 201, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+    sendJson(response, 201, { ok: true, token: sessionToken, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
     return;
   }
 
   if (request.method === "POST" && url.pathname === "/api/v1/auth/login") {
+    if (rateLimited(request, "login", 10)) {
+      sendJson(response, 429, { ok: false, error: "too_many_attempts", plans: Object.values(plans), quests: Object.values(quests) });
+      return;
+    }
+
     const body = await readJson(request);
     const state = await loadState();
-    const account = state.accounts.find((item) => item.email === normalizeEmail(body.email));
+    const account = state.accounts.find((item) => item.email === normalizeEmail(body.email) && !item.deletedAt);
 
     if (!account || !verifyPassword(String(body.password ?? ""), account.passwordHash)) {
       sendJson(response, 401, { ok: false, error: "invalid_credentials", plans: Object.values(plans), quests: Object.values(quests) });
       return;
     }
 
-    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+    // Issue a fresh session token on every login (rotation invalidates any
+    // previously leaked token; the account id is no longer a credential).
+    const sessionToken = newSessionToken();
+    account.tokenHash = hashToken(sessionToken);
+    applyRenewal(account);
+    account.updatedAt = new Date().toISOString();
+    await saveState(state);
+    sendJson(response, 200, { ok: true, token: sessionToken, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
     return;
   }
 
@@ -501,6 +635,9 @@ const server = http.createServer(async (request, response) => {
       account.planRenewsAt = renewalDateForCycle(billingCycle);
       account.creditsRemaining -= upgradeCost;
       account.creditsRemaining += Math.max(0, nextLimit - currentLimit);
+      // The plan's allotment is a hard ceiling: without this, upgrading then
+      // downgrading in a loop would mint credits every cycle.
+      account.creditsRemaining = Math.min(account.creditsRemaining, nextLimit);
     }
 
     if (body.settings && typeof body.settings === "object") {
@@ -520,7 +657,9 @@ const server = http.createServer(async (request, response) => {
     const { state, account } = await findAccount(request);
 
     if (account) {
-      account.creditsRemaining += refund;
+      // Cap at the plan allotment: a refund can only return spent credits, never
+      // push the balance above what the plan grants (blocks refund-loop minting).
+      account.creditsRemaining = Math.min(account.creditsRemaining + refund, allotmentFor(account.plan));
       account.creditsUsed = Math.max(0, (account.creditsUsed ?? 0) - refund);
       account.activityByDate[todayKey()] = Math.max(0, (account.activityByDate[todayKey()] ?? 0) - refund);
       account.updatedAt = new Date().toISOString();
@@ -530,7 +669,7 @@ const server = http.createServer(async (request, response) => {
     }
 
     const { state: guestState, guest } = await findOrCreateGuest(request);
-    guest.creditsRemaining += refund;
+    guest.creditsRemaining = Math.min(guest.creditsRemaining + refund, 40);
     guest.creditsUsed = Math.max(0, (guest.creditsUsed ?? 0) - refund);
     guest.activityByDate[todayKey()] = Math.max(0, (guest.activityByDate[todayKey()] ?? 0) - refund);
     guest.updatedAt = new Date().toISOString();
@@ -541,13 +680,12 @@ const server = http.createServer(async (request, response) => {
 
   if (request.method === "GET" && url.pathname === "/api/v1/leaderboard") {
     const state = await loadState();
-    const requesterId = accountIdFromRequest(request);
-    // Public, sanitized: never ship emails or avatar blobs to everyone.
+    const requesterHash = hashToken(tokenFromRequest(request));
+    // Public, sanitized: never ship emails, avatar blobs, or the id/token to everyone.
     const rows = state.accounts
       .filter((account) => !account.deletedAt)
       .map((account) => ({
-        id: account.id,
-        you: account.id === requesterId,
+        you: Boolean(account.tokenHash) && account.tokenHash === requesterHash,
         username: account.username,
         handle: account.handle,
         plan: account.plan,
@@ -627,8 +765,18 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
-    const roll = Math.random();
-    const rewardCredits = boostGain(roll > 0.98 ? 250 : roll > 0.9 ? 100 : roll > 0.65 ? 35 : 15, account.plan);
+    // The very first booster a player ever opens is a guaranteed strong pull —
+    // it's the hook. Every one after that is a crypto-random weighted draw.
+    let base;
+
+    if ((account.boostersOpened ?? 0) === 0) {
+      base = 100;
+    } else {
+      const roll = randomInt(100);
+      base = roll >= 98 ? 250 : roll >= 90 ? 100 : roll >= 65 ? 35 : 15;
+    }
+
+    const rewardCredits = boostGain(base, account.plan);
     account.boosters -= 1;
     account.boostersOpened = (account.boostersOpened ?? 0) + 1;
     account.creditsRemaining += rewardCredits;
@@ -662,6 +810,10 @@ const server = http.createServer(async (request, response) => {
     }
 
     account.boosters = (account.boosters ?? 0) + count;
+    // Track purchased count + credits spent so refunds can only return real
+    // purchases (never free/daily boosters) and never more than was paid.
+    account.boostersPurchased = (account.boostersPurchased ?? 0) + count;
+    account.boosterSpent = (account.boosterSpent ?? 0) + price;
     // Shop spending is not "usage" — creditsUsed tracks chat prompts only.
     account.creditsRemaining -= price;
     account.updatedAt = new Date().toISOString();
@@ -688,6 +840,48 @@ const server = http.createServer(async (request, response) => {
     account.updatedAt = new Date().toISOString();
     await saveState(state);
     sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/v1/wheel/spin") {
+    const { state, account } = await findAccount(request);
+
+    if (!account) {
+      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      return;
+    }
+
+    if (account.wheelSpinDay === todayKey()) {
+      sendJson(response, 409, { ok: false, error: "already_spun", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+      return;
+    }
+
+    const firstSpin = (account.wheelSpins ?? 0) === 0;
+    const segment = firstSpin
+      ? WHEEL_SEGMENTS.find((seg) => seg.id === WHEEL_FIRST_SPIN_ID)
+      : pickWheelSegment();
+    account.wheelSpins = (account.wheelSpins ?? 0) + 1;
+    account.wheelSpinDay = todayKey();
+
+    if (segment.kind === "credits") {
+      account.creditsRemaining += segment.amount;
+      recordGain(account, segment.amount);
+    } else if (segment.kind === "booster") {
+      account.boosters = (account.boosters ?? 0) + segment.amount;
+    }
+    // "xp" is applied client-side (the season pass lives in a client store);
+    // "none" grants nothing. The daily guard above is the anti-abuse control.
+
+    account.updatedAt = new Date().toISOString();
+    await saveState(state);
+    sendJson(response, 200, {
+      ok: true,
+      segmentId: segment.id,
+      reward: { kind: segment.kind, amount: segment.amount },
+      account: publicAccount(account),
+      plans: Object.values(plans),
+      quests: Object.values(quests),
+    });
     return;
   }
 
@@ -783,17 +977,26 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
-    // Opened boosters are gone — only unopened ones can come back.
-    if ((account.boosters ?? 0) < count) {
+    // Only refund boosters that were actually PURCHASED (not signup/daily gifts),
+    // and only unopened ones. This blocks minting credits from free boosters.
+    const purchased = account.boostersPurchased ?? 0;
+    const refundable = Math.min(count, account.boosters ?? 0, purchased);
+
+    if (refundable < count) {
       sendJson(response, 409, { ok: false, error: "boosters_opened", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
       return;
     }
 
-    account.boosters -= count;
-    account.creditsRemaining += price;
+    // Pay back the average price actually paid — never more than was spent, so
+    // buy-bulk-refund-singly arbitrage can't net free credits.
+    const payout = purchased > 0 ? Math.round(((account.boosterSpent ?? 0) * refundable) / purchased) : 0;
+    account.boosters -= refundable;
+    account.boostersPurchased = purchased - refundable;
+    account.boosterSpent = Math.max(0, (account.boosterSpent ?? 0) - payout);
+    account.creditsRemaining = Math.min(account.creditsRemaining + payout, allotmentFor(account.plan));
     account.updatedAt = new Date().toISOString();
     await saveState(state);
-    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests), count, price });
+    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests), count: refundable, price: payout });
     return;
   }
 
@@ -827,6 +1030,18 @@ const server = http.createServer(async (request, response) => {
   }
 
   sendJson(response, 404, { ok: false, error: "not_found" });
+}
+
+const server = http.createServer((request, response) => {
+  // Serialize every request so the JSON state file's read-modify-write cycles
+  // can't interleave. A handler that throws still returns a 500, never hangs.
+  serialize(() => handleRequest(request, response)).catch((error) => {
+    console.error("request failed", error);
+
+    if (!response.headersSent) {
+      sendJson(response, 500, { ok: false, error: "server_error" });
+    }
+  });
 });
 
 server.listen(port, "0.0.0.0", () => {
