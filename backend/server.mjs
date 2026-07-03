@@ -12,6 +12,8 @@ import {
   applyRenewal,
   rateLimited,
   sendJson,
+  ok,
+  fail,
   readJson,
   todayKey,
   renewalDateForCycle,
@@ -63,11 +65,11 @@ async function handleRequest(request, response) {
     const { account } = await findAccount(request);
 
     if (!account) {
-      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "account_required");
       return;
     }
 
-    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+    ok(response, 200, { account: publicAccount(account) });
     return;
   }
 
@@ -79,7 +81,7 @@ async function handleRequest(request, response) {
 
   if (request.method === "POST" && url.pathname === "/api/v1/accounts") {
     if (rateLimited(request, "signup", 5)) {
-      sendJson(response, 429, { ok: false, error: "too_many_attempts", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 429, "too_many_attempts");
       return;
     }
 
@@ -88,14 +90,14 @@ async function handleRequest(request, response) {
     const password = String(body.password ?? "");
 
     if (!isEmail(email) || !isStrongPassword(password)) {
-      sendJson(response, 400, { ok: false, error: "invalid_account", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 400, "invalid_account");
       return;
     }
 
     const state = await loadState();
 
     if (state.accounts.some((account) => account.email === email)) {
-      sendJson(response, 409, { ok: false, error: "email_taken", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 409, "email_taken");
       return;
     }
 
@@ -139,13 +141,13 @@ async function handleRequest(request, response) {
     state.accounts.push(account);
     state.messages[account.id] = [];
     await saveState(state);
-    sendJson(response, 201, { ok: true, token: sessionToken, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+    ok(response, 201, { token: sessionToken, account: publicAccount(account) });
     return;
   }
 
   if (request.method === "POST" && url.pathname === "/api/v1/auth/login") {
     if (rateLimited(request, "login", 10)) {
-      sendJson(response, 429, { ok: false, error: "too_many_attempts", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 429, "too_many_attempts");
       return;
     }
 
@@ -154,7 +156,7 @@ async function handleRequest(request, response) {
     const account = state.accounts.find((item) => item.email === normalizeEmail(body.email) && !item.deletedAt);
 
     if (!account || !verifyPassword(String(body.password ?? ""), account.passwordHash)) {
-      sendJson(response, 401, { ok: false, error: "invalid_credentials", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "invalid_credentials");
       return;
     }
 
@@ -165,7 +167,7 @@ async function handleRequest(request, response) {
     applyRenewal(account);
     account.updatedAt = new Date().toISOString();
     await saveState(state);
-    sendJson(response, 200, { ok: true, token: sessionToken, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+    ok(response, 200, { token: sessionToken, account: publicAccount(account) });
     return;
   }
 
@@ -174,7 +176,7 @@ async function handleRequest(request, response) {
     const { state, account } = await findAccount(request);
 
     if (!account) {
-      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "account_required");
       return;
     }
 
@@ -185,7 +187,7 @@ async function handleRequest(request, response) {
     if (typeof body.handle === "string") {
       const nextHandle = normalizeHandle(body.handle);
       if (nextHandle.length < 2 || state.accounts.some((item) => item.id !== account.id && item.handle === nextHandle)) {
-        sendJson(response, 409, { ok: false, error: "handle_unavailable", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+        fail(response, 409, "handle_unavailable", { account: publicAccount(account) });
         return;
       }
       account.handle = nextHandle;
@@ -193,7 +195,7 @@ async function handleRequest(request, response) {
 
     if (typeof body.avatarDataUrl === "string") {
       if (!isValidAvatarDataUrl(body.avatarDataUrl)) {
-        sendJson(response, 400, { ok: false, error: "invalid_avatar", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+        fail(response, 400, "invalid_avatar", { account: publicAccount(account) });
         return;
       }
       account.avatarDataUrl = body.avatarDataUrl;
@@ -201,7 +203,7 @@ async function handleRequest(request, response) {
 
     if (typeof body.birthDate !== "undefined") {
       if (!isValidBirthDate(body.birthDate)) {
-        sendJson(response, 400, { ok: false, error: "invalid_birth_date", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+        fail(response, 400, "invalid_birth_date", { account: publicAccount(account) });
         return;
       }
       account.birthDate = String(body.birthDate ?? "");
@@ -209,7 +211,7 @@ async function handleRequest(request, response) {
 
     if (typeof body.onboardingStep === "string") {
       if (!isValidOnboardingStep(body.onboardingStep)) {
-        sendJson(response, 400, { ok: false, error: "invalid_onboarding_step", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+        fail(response, 400, "invalid_onboarding_step", { account: publicAccount(account) });
         return;
       }
       account.onboardingStep = body.onboardingStep;
@@ -217,7 +219,7 @@ async function handleRequest(request, response) {
 
     if (typeof body.currentPassword === "string" || typeof body.newPassword === "string") {
       if (!verifyPassword(String(body.currentPassword ?? ""), account.passwordHash) || !isStrongPassword(String(body.newPassword ?? ""))) {
-        sendJson(response, 400, { ok: false, error: "invalid_password", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+        fail(response, 400, "invalid_password", { account: publicAccount(account) });
         return;
       }
 
@@ -232,13 +234,7 @@ async function handleRequest(request, response) {
       const upgradeCost = billingCycle === "yearly" ? nextPlan.upgradeCost * 10 : nextPlan.upgradeCost;
 
       if ((body.plan !== account.plan || billingCycle !== account.planBillingCycle) && account.creditsRemaining < upgradeCost) {
-        sendJson(response, 402, {
-          ok: false,
-          error: "upgrade_credit_limit",
-          account: publicAccount(account),
-          plans: Object.values(plans),
-          quests: Object.values(quests),
-        });
+        fail(response, 402, "upgrade_credit_limit", { account: publicAccount(account) });
         return;
       }
 
@@ -258,7 +254,7 @@ async function handleRequest(request, response) {
 
     account.updatedAt = new Date().toISOString();
     await saveState(state);
-    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+    ok(response, 200, { account: publicAccount(account) });
     return;
   }
 
@@ -276,7 +272,7 @@ async function handleRequest(request, response) {
       account.activityByDate[todayKey()] = Math.max(0, (account.activityByDate[todayKey()] ?? 0) - refund);
       account.updatedAt = new Date().toISOString();
       await saveState(state);
-      sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests), refunded: refund });
+      ok(response, 200, { account: publicAccount(account), refunded: refund });
       return;
     }
 
@@ -315,7 +311,7 @@ async function handleRequest(request, response) {
     const { state, account } = await findAccount(request);
 
     if (!account) {
-      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "account_required");
       return;
     }
 
@@ -324,7 +320,7 @@ async function handleRequest(request, response) {
     const birthday = String(account.birthDate ?? "").slice(5, 10);
 
     if (!birthday || birthday !== today.slice(5, 10) || account.birthdayGiftYear === year) {
-      sendJson(response, 409, { ok: false, error: "birthday_gift_unavailable", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 409, "birthday_gift_unavailable", { account: publicAccount(account) });
       return;
     }
 
@@ -334,7 +330,7 @@ async function handleRequest(request, response) {
     recordGain(account, rewardCredits);
     account.updatedAt = new Date().toISOString();
     await saveState(state);
-    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests), rewardCredits });
+    ok(response, 200, { account: publicAccount(account), rewardCredits });
     return;
   }
 
@@ -344,12 +340,12 @@ async function handleRequest(request, response) {
     const { state, account } = await findAccount(request);
 
     if (!account) {
-      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "account_required");
       return;
     }
 
     if (!canClaimQuest(account, questId)) {
-      sendJson(response, 409, { ok: false, error: "quest_unavailable", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 409, "quest_unavailable", { account: publicAccount(account) });
       return;
     }
 
@@ -360,7 +356,7 @@ async function handleRequest(request, response) {
     recordGain(account, rewardCredits);
     account.updatedAt = new Date().toISOString();
     await saveState(state);
-    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests), rewardCredits });
+    ok(response, 200, { account: publicAccount(account), rewardCredits });
     return;
   }
 
@@ -368,12 +364,12 @@ async function handleRequest(request, response) {
     const { state, account } = await findAccount(request);
 
     if (!account) {
-      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "account_required");
       return;
     }
 
     if ((account.boosters ?? 0) <= 0) {
-      sendJson(response, 409, { ok: false, error: "no_boosters", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 409, "no_boosters", { account: publicAccount(account) });
       return;
     }
 
@@ -395,7 +391,7 @@ async function handleRequest(request, response) {
     recordGain(account, rewardCredits);
     account.updatedAt = new Date().toISOString();
     await saveState(state);
-    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests), rewardCredits });
+    ok(response, 200, { account: publicAccount(account), rewardCredits });
     return;
   }
 
@@ -407,17 +403,17 @@ async function handleRequest(request, response) {
     const { state, account } = await findAccount(request);
 
     if (!account) {
-      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "account_required");
       return;
     }
 
     if (!price) {
-      sendJson(response, 400, { ok: false, error: "invalid_count", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 400, "invalid_count", { account: publicAccount(account) });
       return;
     }
 
     if (account.creditsRemaining < price) {
-      sendJson(response, 402, { ok: false, error: "credit_limit", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 402, "credit_limit", { account: publicAccount(account) });
       return;
     }
 
@@ -430,7 +426,7 @@ async function handleRequest(request, response) {
     account.creditsRemaining -= price;
     account.updatedAt = new Date().toISOString();
     await saveState(state);
-    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests), count, price });
+    ok(response, 200, { account: publicAccount(account), count, price });
     return;
   }
 
@@ -438,12 +434,12 @@ async function handleRequest(request, response) {
     const { state, account } = await findAccount(request);
 
     if (!account) {
-      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "account_required");
       return;
     }
 
     if (account.dailyBoosterDay === todayKey()) {
-      sendJson(response, 409, { ok: false, error: "already_claimed", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 409, "already_claimed", { account: publicAccount(account) });
       return;
     }
 
@@ -451,7 +447,7 @@ async function handleRequest(request, response) {
     account.boosters = (account.boosters ?? 0) + 1;
     account.updatedAt = new Date().toISOString();
     await saveState(state);
-    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+    ok(response, 200, { account: publicAccount(account) });
     return;
   }
 
@@ -459,12 +455,12 @@ async function handleRequest(request, response) {
     const { state, account } = await findAccount(request);
 
     if (!account) {
-      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "account_required");
       return;
     }
 
     if (account.wheelSpinDay === todayKey()) {
-      sendJson(response, 409, { ok: false, error: "already_spun", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 409, "already_spun", { account: publicAccount(account) });
       return;
     }
 
@@ -486,13 +482,10 @@ async function handleRequest(request, response) {
 
     account.updatedAt = new Date().toISOString();
     await saveState(state);
-    sendJson(response, 200, {
-      ok: true,
+    ok(response, 200, {
       segmentId: segment.id,
       reward: { kind: segment.kind, amount: segment.amount },
       account: publicAccount(account),
-      plans: Object.values(plans),
-      quests: Object.values(quests),
     });
     return;
   }
@@ -503,18 +496,12 @@ async function handleRequest(request, response) {
     const cost = promptCost(body.steps);
 
     if (!account) {
-      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "account_required");
       return;
     }
 
     if (account.creditsRemaining < cost) {
-      sendJson(response, 402, {
-        ok: false,
-        error: "credit_limit",
-        account: publicAccount(account),
-        plans: Object.values(plans),
-        quests: Object.values(quests),
-      });
+      fail(response, 402, "credit_limit", { account: publicAccount(account) });
       return;
     }
 
@@ -533,7 +520,7 @@ async function handleRequest(request, response) {
     state.messages[account.id] = [...(state.messages[account.id] ?? []), message].slice(-200);
     await saveState(state);
 
-    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests), message, cost });
+    ok(response, 200, { account: publicAccount(account), message, cost });
     return;
   }
 
@@ -580,12 +567,12 @@ async function handleRequest(request, response) {
     const { state, account } = await findAccount(request);
 
     if (!account) {
-      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "account_required");
       return;
     }
 
     if (!price) {
-      sendJson(response, 400, { ok: false, error: "invalid_count", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 400, "invalid_count", { account: publicAccount(account) });
       return;
     }
 
@@ -595,7 +582,7 @@ async function handleRequest(request, response) {
     const refundable = Math.min(count, account.boosters ?? 0, purchased);
 
     if (refundable < count) {
-      sendJson(response, 409, { ok: false, error: "boosters_opened", account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 409, "boosters_opened", { account: publicAccount(account) });
       return;
     }
 
@@ -608,7 +595,7 @@ async function handleRequest(request, response) {
     account.creditsRemaining = Math.min(account.creditsRemaining + payout, allotmentFor(account.plan));
     account.updatedAt = new Date().toISOString();
     await saveState(state);
-    sendJson(response, 200, { ok: true, account: publicAccount(account), plans: Object.values(plans), quests: Object.values(quests), count: refundable, price: payout });
+    ok(response, 200, { account: publicAccount(account), count: refundable, price: payout });
     return;
   }
 
@@ -616,7 +603,7 @@ async function handleRequest(request, response) {
     const { state, account } = await findAccount(request);
 
     if (!account) {
-      sendJson(response, 401, { ok: false, error: "account_required", plans: Object.values(plans), quests: Object.values(quests) });
+      fail(response, 401, "account_required");
       return;
     }
 

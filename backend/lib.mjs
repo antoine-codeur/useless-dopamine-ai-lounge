@@ -102,6 +102,16 @@ export function sendJson(response, statusCode, payload) {
   response.end(JSON.stringify(payload));
 }
 
+/** Success response carrying the shared plans + quests catalogs (~most routes). */
+export function ok(response, status, extra = {}) {
+  sendJson(response, status, { ok: true, ...extra, plans: Object.values(plans), quests: Object.values(quests) });
+}
+
+/** Error response carrying the shared plans + quests catalogs. */
+export function fail(response, status, error, extra = {}) {
+  sendJson(response, status, { ok: false, error, ...extra, plans: Object.values(plans), quests: Object.values(quests) });
+}
+
 export async function readJson(request, limitBytes = 2_000_000) {
   const chunks = [];
   let size = 0;
