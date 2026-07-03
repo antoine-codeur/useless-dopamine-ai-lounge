@@ -1,49 +1,12 @@
-import { CSSProperties, DragEvent as ReactDragEvent, FocusEvent as ReactFocusEvent, FormEvent, PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import {
-  ChevronDown,
-  CircleDashed,
-  FileText,
-  Ghost,
-  Gift,
-  ImagePlus,
-  Mic,
-  MicOff,
-  Lock,
-  ListPlus,
-  PanelRightClose,
-  PanelRightOpen,
-  Paperclip,
-  Pencil,
-  Send,
-  Sparkles,
-  Trash2,
-  X,
-  Zap,
-} from "lucide-react";
-import { Button, IconButton } from "../../components/Button/Button";
-import { ChatBubble } from "../../components/ChatBubble/ChatBubble";
+import { CSSProperties, useEffect, useRef, useState } from "react";
+import { ImagePlus, Sparkles } from "lucide-react";
 import { threadHasConversationContent, useChatStore } from "./chat.store";
-import { PROMPT_COST, quickPrompts } from "./chat.logic";
-import type { Account, GuestSession, Message } from "../../types";
-import { prototype } from "../../app/prototype";
-import {
-  claimBirthdayGift,
-  claimQuest,
-  deleteAccount,
-  getAuthToken,
-  loadGuestSession,
-  loadSession,
-  openBooster,
-  updateAccount,
-} from "../../lib/api";
-import { recordCredit } from "../stats/ledger.store";
-import { addSeasonXp } from "../season/season.store";
+import { PROMPT_COST } from "./chat.logic";
+import type { Account, GuestSession } from "../../types";
 import { SeasonPanel } from "../season/SeasonPanel";
 import { RankingPanel } from "../ranking/RankingPanel";
 import { useSpeechToText } from "./useSpeechToText";
-import { applyAccountResult, useAccountStore } from "../profile/account.store";
-import { isHandle, isStrongPassword, isValidOptionalBirthDate } from "../auth/validation";
+import { useAccountStore } from "../profile/account.store";
 import { useShellStore } from "../shell/shell.store";
 import { SettingsPanel } from "../settings/SettingsPanel";
 import { ActivityPanel } from "../activity/ActivityPanel";
@@ -55,11 +18,8 @@ import { QuestsPanel } from "../quests/QuestsPanel";
 import { LibraryPanel } from "../library/LibraryPanel";
 import { ConfirmModal } from "../../components/ConfirmModal/ConfirmModal";
 import { bumpQuest } from "../quests/quest.store";
-import { PersonaMenu } from "../personas/PersonaMenu";
 import { StatsPanel } from "../stats/StatsPanel";
-import { useTelemetryStore } from "../stats/telemetry.store";
 import { Inspector } from "./Inspector";
-import { ModeMenu } from "../themes/ModeMenu";
 import { AuthModal } from "../auth/AuthModal";
 import { ThumbBar } from "./ThumbBar";
 import { OnboardingScreen } from "./OnboardingScreen";
@@ -72,17 +32,24 @@ import { useAttachments } from "./useAttachments";
 import { useAuthFlow } from "./useAuthFlow";
 import { useFeedScroll } from "./useFeedScroll";
 import { useComposer } from "./useComposer";
+import { useTooltip } from "./useTooltip";
+import { useMessageActions } from "./useMessageActions";
+import { useRewards } from "./useRewards";
+import { useAccountMenuControls } from "./useAccountMenuControls";
+import { useProfileForm } from "./useProfileForm";
+import { useAccountLifecycle } from "./useAccountLifecycle";
+import { useBootSession } from "./useBootSession";
+import { useKeyboardOpen } from "./useKeyboardOpen";
+import { useTelemetryTracking } from "./useTelemetryTracking";
+import { useSidebarLayout } from "./useSidebarLayout";
+import { ChatTopbar } from "./ChatTopbar";
+import { MessageFeed } from "./MessageFeed";
+import { Composer } from "./Composer";
 import { AvatarModal } from "../onboarding/AvatarModal";
 import { FloatingTooltip } from "../../components/FloatingTooltip/FloatingTooltip";
-import type { TooltipAnchor } from "../../components/FloatingTooltip/FloatingTooltip";
 import { showToast } from "../../components/Toast/toast.store";
-import { celebrate, useRewardStore } from "../rewards/reward.store";
-import { openBoosterPuzzle } from "../rewards/puzzle.store";
-import { creditGain } from "../rewards/creditCombo.store";
-import { purgeScopeData, scopeIsNew, switchDataScope } from "../../lib/accountScope";
+import { useRewardStore } from "../rewards/reward.store";
 import { ShopPanel } from "../shop/ShopPanel";
-import { nextBoosterFloor } from "../shop/shop.store";
-import { useDismiss } from "../../lib/useDismiss";
 import "./ChatPage.css";
 
 // Profile and Settings are absent on purpose: the account menu owns them.
@@ -92,12 +59,10 @@ import "./ChatPage.css";
 export function ChatPage() {
   /** Pending save action awaiting the "keep temporary chat?" confirmation. */
   const [keepPrompt, setKeepPrompt] = useState<{ run: () => void } | null>(null);
-  /** Virtual keyboard heuristic: an editable element has focus (mobile). */
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const keyboardOpen = useKeyboardOpen();
   const view = useShellStore((state) => state.view);
   const setView = useShellStore((state) => state.setView);
   const actionMessage = useShellStore((state) => state.actionMessage);
-  const setActionMessage = useShellStore((state) => state.setActionMessage);
   const {
     authMode,
     setAuthMode,
@@ -115,29 +80,27 @@ export function ChatPage() {
     submitLogin,
   } = useAuthFlow();
   const [guest, setGuest] = useState<GuestSession | null>(null);
-  const [profileName, setProfileName] = useState("");
-  const [profileHandle, setProfileHandle] = useState("");
-  const [profileBirthDate, setProfileBirthDate] = useState("");
-  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "" });
   const { avatarEditor, avatarScale, setAvatarScale, openAvatarImageFile, openAvatarFile, closeAvatarEditor, saveAvatar } = useAvatarEditor();
   const [showArchivedThreads, setShowArchivedThreads] = useState(false);
   const [billingCycle, setBillingCycle] = useState<Account["planBillingCycle"]>("monthly");
-  const [profileDragActive, setProfileDragActive] = useState(false);
-  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [confirmDeleteAccount, setConfirmDeleteAccount] = useState(false);
-  // Phone-only: the sidebar becomes a drawer (threads, nav, account menu).
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   // Drag & drop from the OS (Explorer…) straight onto the chat stage.
   const [dropActive, setDropActive] = useState(false);
   const dragDepthRef = useRef(0);
   const speech = useSpeechToText((text) => {
-    setPrompt((current) => (current ? `${current.trimEnd()} ${text}` : text));
+    composer.setPrompt((current) => (current ? `${current.trimEnd()} ${text}` : text));
     promptRef.current?.focus();
   });
-  const [accountMenuPosition, setAccountMenuPosition] = useState<{ left: number; bottom: number } | null>(null);
-  const accountButtonRef = useRef<HTMLButtonElement | null>(null);
-  const accountHoverTimer = useRef<number | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem("uda:sidebar-collapsed") === "true");
+  const {
+    sidebarCollapsed,
+    setSidebarCollapsed,
+    inspectorCollapsed,
+    setInspectorCollapsed,
+    sidebarWidth,
+    setIsResizingSidebar,
+    mobileNavOpen,
+    setMobileNavOpen,
+  } = useSidebarLayout();
   const {
     threadMenuId,
     setThreadMenuId,
@@ -152,20 +115,12 @@ export function ChatPage() {
     commitRename,
     handleDeleteThread,
   } = useThreadMenu(() => setSidebarCollapsed(false));
-  const [inspectorCollapsed, setInspectorCollapsed] = useState(() => localStorage.getItem("uda:inspector-collapsed") === "true");
-  const [sidebarWidth, setSidebarWidth] = useState(() => Number(localStorage.getItem("uda:sidebar-width") ?? 280));
-  const [isResizingSidebar, setIsResizingSidebar] = useState(false);
-  const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
-  const [isBooting, setIsBooting] = useState(true);
   const [limitReached, setLimitReached] = useState(false);
-  const [floatingTooltip, setFloatingTooltip] = useState<TooltipAnchor | null>(null);
+  const { floatingTooltip, handleTooltipPointerOver, handleTooltipPointerOut, handleTooltipFocus, handleTooltipBlur } = useTooltip();
   const threads = useChatStore((state) => state.threads);
   const activeThreadId = useChatStore((state) => state.activeThreadId);
-  const addVariant = useChatStore((state) => state.addVariant);
   const setActiveVariant = useChatStore((state) => state.setActiveVariant);
-  const setReaction = useChatStore((state) => state.setReaction);
   const toggleBookmark = useChatStore((state) => state.toggleBookmark);
-  const branchFromMessage = useChatStore((state) => state.branchFromMessage);
   const clearChat = useChatStore((state) => state.clearChat);
   const createThread = useChatStore((state) => state.createThread);
   const setActiveThread = useChatStore((state) => state.setActiveThread);
@@ -174,10 +129,47 @@ export function ChatPage() {
   const setThreadTemporary = useChatStore((state) => state.setThreadTemporary);
   const account = useAccountStore((state) => state.account);
   const plans = useAccountStore((state) => state.plans);
-  const setAccount = useAccountStore((state) => state.setAccount);
-  const setPlans = useAccountStore((state) => state.setPlans);
-  const signOut = useAccountStore((state) => state.signOut);
-  const accountMenuRef = useDismiss<HTMLDivElement>(showAccountMenu, () => setShowAccountMenu(false));
+  const { isBooting, backendStatus } = useBootSession(setGuest);
+  useTelemetryTracking(view, account?.plan);
+  const {
+    showAccountMenu,
+    setShowAccountMenu,
+    accountMenuPosition,
+    accountButtonRef,
+    accountMenuRef,
+    copyAccountId,
+    openAccountView,
+    openAccountMenu,
+    handleAccountHoverEnter,
+    handleAccountHoverLeave,
+  } = useAccountMenuControls(account, guest);
+  const {
+    profileName,
+    setProfileName,
+    profileHandle,
+    setProfileHandle,
+    profileBirthDate,
+    setProfileBirthDate,
+    passwordForm,
+    setPasswordForm,
+    passwordReady,
+    profileNameInvalid,
+    profileHandleInvalid,
+    profileBirthDateInvalid,
+    saveOnboardingProfile,
+    skipOnboardingStep,
+    finishBirthdayStep,
+    saveProfile,
+    changePassword,
+  } = useProfileForm(account);
+  const {
+    profileDragActive,
+    handleDeleteAccount,
+    handleSignOut,
+    handleProfileDragOver,
+    handleProfileDragLeave,
+    handleProfileDrop,
+  } = useAccountLifecycle({ account, setGuest, setShowAccountMenu, setConfirmDeleteAccount, openAvatarImageFile });
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
   const profileAvatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -198,32 +190,7 @@ export function ChatPage() {
     ) ?? false;
   /** The ghost toggle only shows while it can actually do something. */
   const canToggleTemporary = !!activeThread && (activeThread.temporary || !threadHasSaves);
-  const {
-    prompt,
-    setPrompt,
-    editTargetId,
-    setEditTargetId,
-    queuedPrompts,
-    setQueuedPrompts,
-    suggestionIndex,
-    isProcessing,
-    promptHistoryIndexRef,
-    temporaryContextRef,
-    trimmedPrompt,
-    editCandidate,
-    editCandidateDepth,
-    canSend,
-    composerSuggestions,
-    sendPromptText,
-    handleQueue,
-    cancelGeneration,
-    submitPrompt,
-    retryMessage,
-    handleEditPrompt,
-    skipProcessing,
-    handleComposerKeyDown,
-    completePromptWord,
-  } = useComposer({
+  const composer = useComposer({
     account,
     guest,
     setGuest,
@@ -234,74 +201,12 @@ export function ChatPage() {
     stickToBottomRef,
     setLimitReached,
   });
+  const { handleReact, handleBookmark, handleBranch, handleBranchHere, toggleTemporary } = useMessageActions(activeThread, setKeepPrompt);
+  const { choosePlan, claim, openCreditBooster, claimBirthday } = useRewards({ account, billingCycle, setLimitReached, openAuth });
   const visibleThreads = [...threads]
     .filter(threadHasConversationContent)
     .filter((thread) => showArchivedThreads || !thread.archived || thread.id === activeThreadId)
     .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updatedAt.localeCompare(a.updatedAt));
-
-  useEffect(() => {
-    if (!getAuthToken()) {
-      // Guest identity: make sure the guest data bucket is the live one.
-      if (switchDataScope("guest")) {
-        window.location.reload();
-        return;
-      }
-
-      loadGuestSession().then((result) => {
-        if (result.ok && result.guest) {
-          setGuest(result.guest);
-          setPlans(result.plans);
-        }
-        setIsBooting(false);
-      });
-      return;
-    }
-
-    loadSession().then((result) => {
-      if (result.ok && result.account) {
-        // Bind every unlock/conversation/etc. to this account. First scoping
-        // of a pre-existing session carries the accumulated data over.
-        if (switchDataScope(result.account.id, scopeIsNew(result.account.id))) {
-          window.location.reload();
-          return;
-        }
-
-        applyAccountResult(result);
-      } else {
-        loadGuestSession().then((guestResult) => {
-          if (guestResult.ok && guestResult.guest) {
-            setGuest(guestResult.guest);
-            setPlans(guestResult.plans);
-          }
-        });
-      }
-      setIsBooting(false);
-    });
-  }, [setAccount, setPlans]);
-
-  useEffect(() => {
-    if (!account) {
-      return;
-    }
-
-    setProfileName(account.username ?? "");
-    setProfileHandle(account.handle ?? "");
-    setProfileBirthDate(account.birthDate ?? "");
-  }, [account]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch("/api/v1/health", { signal: controller.signal })
-      .then((response) => {
-        setBackendStatus(response.ok ? "online" : "offline");
-      })
-      .catch(() => {
-        setBackendStatus("offline");
-      });
-
-    return () => controller.abort();
-  }, []);
 
   useEffect(() => {
     if (!promptRef.current) {
@@ -310,7 +215,7 @@ export function ChatPage() {
 
     promptRef.current.style.height = "0px";
     promptRef.current.style.height = `${Math.min(promptRef.current.scrollHeight, 160)}px`;
-  }, [prompt]);
+  }, [composer.prompt]);
 
   useEffect(() => {
     if (!showAuthModal) {
@@ -327,26 +232,6 @@ export function ChatPage() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [showAuthModal]);
-
-  useEffect(() => {
-    localStorage.setItem("uda:sidebar-collapsed", String(sidebarCollapsed));
-  }, [sidebarCollapsed]);
-
-  useEffect(() => {
-    localStorage.setItem("uda:inspector-collapsed", String(inspectorCollapsed));
-  }, [inspectorCollapsed]);
-
-  useEffect(() => {
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "b") {
-        event.preventDefault();
-        setSidebarCollapsed((value) => !value);
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
 
   useEffect(() => {
     // Focused plans view: Escape triggers the "← Back" (unless an overlay owns it).
@@ -372,51 +257,6 @@ export function ChatPage() {
   }, [view, showAuthModal, showAccountMenu, threadMenuId, avatarEditor, setView]);
 
   useEffect(() => {
-    // Global interaction telemetry: every button click, classified by region.
-    useTelemetryStore.getState().recordBoot();
-
-    const regionOf = (element: Element) => {
-      if (element.closest(".sidebar")) return "sidebar";
-      if (element.closest(".topbar")) return "topbar";
-      if (element.closest(".prompt-form") || element.closest(".prompt-dock")) return "composer";
-      if (element.closest(".inspector")) return "inspector";
-      if (element.closest(".chat-bubble")) return "chat";
-      if (element.closest(".account-popover")) return "account-menu";
-      if (element.closest(".mode-menu__popover") || element.closest(".thread-menu")) return "menus";
-      if (element.closest(".toaster")) return "toasts";
-      if (element.closest(".modal-backdrop") || element.closest(".reward-backdrop")) return "modals";
-      if (element.closest(".content-panel")) return "pages";
-      return "app";
-    };
-
-    const onClick = (event: globalThis.MouseEvent) => {
-      const target = event.target instanceof Element ? event.target.closest("button, a") : null;
-
-      if (!target) {
-        return;
-      }
-
-      const label = (target.getAttribute("aria-label") ?? target.textContent ?? "button").trim().slice(0, 32) || "button";
-      useTelemetryStore.getState().recordClick(`${regionOf(target)}/${label}`);
-    };
-
-    document.addEventListener("click", onClick, true);
-    return () => document.removeEventListener("click", onClick, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- installed once
-  }, []);
-
-  useEffect(() => {
-    // Time spent per page.
-    const startedAt = Date.now();
-    return () => useTelemetryStore.getState().addPageTime(view, (Date.now() - startedAt) / 1000);
-  }, [view]);
-
-  useEffect(() => {
-    // Plan journey: switches and time spent per plan (guests count too).
-    useTelemetryStore.getState().trackPlan(account?.plan ?? "guest");
-  }, [account?.plan]);
-
-  useEffect(() => {
     // Leftover temporary chats from a previous session don't survive boot.
     const { threads: allThreads, activeThreadId: bootActiveId } = useChatStore.getState();
     allThreads
@@ -427,7 +267,7 @@ export function ChatPage() {
 
   useEffect(() => {
     // Temporary chats die when you leave them (thread switch or page change).
-    const previous = temporaryContextRef.current;
+    const previous = composer.temporaryContextRef.current;
     const inChat = view === "chat";
     const changedThread = activeThreadId !== previous.threadId;
     const leftChat = previous.inChat && !inChat;
@@ -441,188 +281,45 @@ export function ChatPage() {
       }
     }
 
-    temporaryContextRef.current = { threadId: activeThreadId, inChat };
+    composer.temporaryContextRef.current = { threadId: activeThreadId, inChat };
   }, [activeThreadId, view, deleteThread]);
-
-  useEffect(() => {
-    // Track editable focus so the thumb bar can duck under the virtual keyboard.
-    const isEditable = (target: EventTarget | null) =>
-      target instanceof HTMLElement && (target.tagName === "TEXTAREA" || target.tagName === "INPUT" || target.isContentEditable);
-    const inDock = (target: EventTarget | null) => target instanceof Element && !!target.closest(".prompt-dock");
-    // Tapping a composer tool (appearance, persona, attach…) blurs the textarea
-    // for a beat — the thumb bar must NOT pop back during that interaction.
-    let dockInteraction = false;
-    const onPointerDown = (event: PointerEvent) => {
-      dockInteraction = inDock(event.target);
-    };
-    const onFocusIn = (event: FocusEvent) => {
-      if (isEditable(event.target)) {
-        setKeyboardOpen(true);
-      }
-    };
-    const onFocusOut = (event: FocusEvent) => {
-      if (isEditable(event.target) && !inDock(event.relatedTarget) && !dockInteraction) {
-        setKeyboardOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", onPointerDown, true);
-    document.addEventListener("focusin", onFocusIn);
-    document.addEventListener("focusout", onFocusOut);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown, true);
-      document.removeEventListener("focusin", onFocusIn);
-      document.removeEventListener("focusout", onFocusOut);
-    };
-  }, []);
 
   // Navigating anywhere closes the phone drawer — selection done, get out of the way.
   useEffect(() => {
     setMobileNavOpen(false);
   }, [view, activeThreadId]);
 
-  // The drawer shows the FULL sidebar (labels + threads), never the icon rail.
-  useEffect(() => {
-    if (mobileNavOpen) {
-      setSidebarCollapsed(false);
-      return;
-    }
-
-    if (window.matchMedia("(max-width: 760px)").matches) {
-      setSidebarCollapsed(true);
-    }
-  }, [mobileNavOpen]);
-
-  useEffect(() => {
-    // Phone layout keeps only the icon rail: force-collapse when entering it.
-    const media = window.matchMedia("(max-width: 760px)");
-    const apply = (matches: boolean) => {
-      if (matches) {
-        setSidebarCollapsed(true);
-      }
-    };
-
-    apply(media.matches);
-    const onChange = (event: MediaQueryListEvent) => apply(event.matches);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("uda:sidebar-width", String(sidebarWidth));
-  }, [sidebarWidth]);
-
-  useEffect(() => {
-    if (!isResizingSidebar) {
-      return;
-    }
-
-    const onPointerMove = (event: PointerEvent) => {
-      if (event.clientX <= 96) {
-        setSidebarCollapsed(true);
-        return;
-      }
-
-      setSidebarCollapsed(false);
-      setSidebarWidth(Math.min(420, Math.max(220, event.clientX)));
-    };
-    const onPointerUp = () => setIsResizingSidebar(false);
-
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
-    return () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
-    };
-  }, [isResizingSidebar]);
-
   const activeCredits = account?.creditsRemaining ?? guest?.creditsRemaining ?? 0;
 
   useEffect(() => {
     // Queue drain: as soon as the agent is free, the next prompt fires.
-    if (isProcessing || queuedPrompts.length === 0 || view !== "chat") {
+    if (composer.isProcessing || composer.queuedPrompts.length === 0 || view !== "chat") {
       return;
     }
 
     if (activeCredits < PROMPT_COST) {
-      setQueuedPrompts([]);
+      composer.setQueuedPrompts([]);
       showToast({ variant: "warning", title: "Queue cleared", description: "Not enough credits to keep sending." });
       return;
     }
 
-    const [next, ...rest] = queuedPrompts;
-    setQueuedPrompts(rest);
-    sendPromptText(next);
+    const [next, ...rest] = composer.queuedPrompts;
+    composer.setQueuedPrompts(rest);
+    composer.sendPromptText(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- drain on state change
-  }, [isProcessing, queuedPrompts, view, activeCredits]);
+  }, [composer.isProcessing, composer.queuedPrompts, view, activeCredits]);
   const activeCreditsUsed = account?.creditsUsed ?? guest?.creditsUsed ?? 0;
   const activeActivity = account?.activityByDate ?? guest?.activityByDate ?? {};
   const activeBoosters = account?.boosters ?? 0;
   const activityStats = computeActivityStats(activeActivity);
   const currentPlan = plans.find((plan) => plan.id === account?.plan);
   const activePlanLabel = account ? currentPlan?.label ?? "Free" : "Guest";
-  const passwordReady = isStrongPassword(passwordForm.newPassword);
-  const profileNameInvalid = profileName.length > 0 && profileName.trim().length < 2;
-  const profileHandleInvalid = profileHandle.length > 0 && !isHandle(profileHandle);
-  const profileBirthDateInvalid = !isValidOptionalBirthDate(profileBirthDate);
   const isGuestLanding = !account && title === "New conversation" && conversationEmpty;
   // CSS vars (not an inline grid template) so responsive media queries win.
   const sidebarWidthStyle = {
     "--sidebar-width": `${sidebarCollapsed ? 56 : sidebarWidth}px`,
     "--inspector-width": inspectorCollapsed ? "0px" : "19rem",
   } as CSSProperties;
-
-  function showTooltipFor(element: HTMLElement) {
-    // Touch fires pointerover on tap; without this guard the tooltip flashes on
-    // every tap. Hover-capable pointers still get it; labels have aria fallbacks.
-    if (!window.matchMedia("(hover: hover)").matches) {
-      return;
-    }
-
-    const label = element.dataset.tooltip;
-
-    if (!label) {
-      return;
-    }
-
-    const rect = element.getBoundingClientRect();
-    setFloatingTooltip({ label, left: rect.left, top: rect.top, bottom: rect.bottom, width: rect.width });
-  }
-
-  function tooltipTarget(target: EventTarget | null) {
-    return target instanceof Element ? target.closest<HTMLElement>("[data-tooltip]") : null;
-  }
-
-  function handleTooltipPointerOver(event: ReactPointerEvent<HTMLElement>) {
-    const element = tooltipTarget(event.target);
-
-    if (element) {
-      showTooltipFor(element);
-    }
-  }
-
-  function handleTooltipPointerOut(event: ReactPointerEvent<HTMLElement>) {
-    const element = tooltipTarget(event.target);
-    const nextTarget = event.relatedTarget;
-
-    if (element && nextTarget instanceof Node && element.contains(nextTarget)) {
-      return;
-    }
-
-    setFloatingTooltip(null);
-  }
-
-  function handleTooltipFocus(event: ReactFocusEvent<HTMLElement>) {
-    const element = tooltipTarget(event.target);
-
-    if (element) {
-      showTooltipFor(element);
-    }
-  }
-
-  function handleTooltipBlur() {
-    setFloatingTooltip(null);
-  }
 
   function newThread() {
     createThread();
@@ -647,389 +344,6 @@ export function ChatPage() {
     });
   }
 
-
-
-  /** Branch "in this conversation": duplicate the current bud as a fresh one. */
-  function handleBranchHere(message: Message) {
-    addVariant(message.id, message.content);
-    bumpQuest("buds");
-    showToast({
-      variant: "success",
-      title: "New bud grown",
-      description: "Same result, fresh branch — the previous bud keeps its continuation.",
-    });
-  }
-
-  /** "Branch in new chat": duplicates the whole conversation (buds included). */
-  function handleBranch(message: Message) {
-    const branchedId = branchFromMessage(message.id);
-
-    if (branchedId) {
-      setView("chat");
-      bumpQuest("branches");
-      showToast({
-        variant: "success",
-        title: "Branched in a new chat",
-        description: "Full conversation duplicated — switch buds freely here.",
-      });
-    }
-  }
-
-  /** Saving inside a temporary chat first asks to keep the conversation. */
-  function guardTemporarySave(run: () => void) {
-    if (activeThread?.temporary) {
-      setKeepPrompt({ run });
-      return;
-    }
-
-    run();
-  }
-
-  function handleReact(message: Message, reaction: "up" | "down") {
-    guardTemporarySave(() => {
-      const budIndex = message.variantIndex ?? 0;
-      const current = message.reactions?.[budIndex];
-      const clearing = current === reaction;
-      setReaction(message.id, budIndex, clearing ? undefined : reaction);
-
-      if (!clearing) {
-        bumpQuest(reaction === "up" ? "likes" : "dislikes");
-      }
-    });
-  }
-
-  function handleBookmark(message: Message) {
-    guardTemporarySave(() => {
-      const budIndex = message.variantIndex ?? 0;
-      const alreadySaved = !!message.bookmarks?.[budIndex];
-      toggleBookmark(message.id, budIndex);
-
-      if (!alreadySaved) {
-        bumpQuest("bookmarks");
-      }
-
-      showToast(
-        alreadySaved
-          ? { variant: "info", title: "Removed from Library" }
-          : { variant: "success", title: "Saved to Library", description: "Find it under Read later." },
-      );
-    });
-  }
-
-  function toggleTemporary() {
-    if (!activeThread) {
-      return;
-    }
-
-    if (activeThread.temporary) {
-      setThreadTemporary(activeThread.id, false);
-      showToast({ variant: "success", title: "Conversation saved", description: "It will stick around now." });
-      return;
-    }
-
-    const hasSaves = activeThread.messages.some(
-      (message) =>
-        Object.keys(message.bookmarks ?? {}).length > 0 || Object.keys(message.reactions ?? {}).length > 0,
-    );
-
-    if (hasSaves) {
-      showToast({ variant: "warning", title: "Can't make this temporary", description: "It already holds saved items (likes or bookmarks)." });
-      return;
-    }
-
-    setThreadTemporary(activeThread.id, true);
-    bumpQuest("temp-chats");
-    showToast({ variant: "info", title: "Temporary chat", description: "Deleted when you leave — saving anything keeps it." });
-  }
-
-  async function saveOnboardingProfile(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (profileName.trim().length < 2 || !isHandle(profileHandle)) {
-      setActionMessage("Fix the highlighted fields before continuing.");
-      return;
-    }
-
-    const result = await updateAccount({ username: profileName, handle: profileHandle, onboardingStep: "avatar" });
-
-    if (!result.ok) {
-      setActionMessage(result.error === "handle_unavailable" ? "That handle is unavailable." : "Profile could not be saved.");
-      return;
-    }
-
-    applyAccountResult(result);
-    setActionMessage("");
-  }
-
-  async function skipOnboardingStep(step: Account["onboardingStep"]) {
-    setActionMessage("");
-    const result = await updateAccount({ onboardingStep: step });
-
-    if (result.ok) {
-      applyAccountResult(result);
-    }
-  }
-
-  async function finishBirthdayStep(event?: FormEvent<HTMLFormElement>) {
-    event?.preventDefault();
-
-    if (!isValidOptionalBirthDate(profileBirthDate)) {
-      setActionMessage("Use a valid past date or leave it empty.");
-      return;
-    }
-
-    const result = await updateAccount({ birthDate: profileBirthDate, onboardingStep: "complete" });
-
-    if (!result.ok) {
-      setActionMessage("Use a valid past date or leave it empty.");
-      return;
-    }
-
-    applyAccountResult(result);
-    setActionMessage("");
-
-    if (profileBirthDate) {
-      bumpQuest("birthday-set");
-    }
-  }
-
-  async function saveProfile() {
-    if (profileName.trim().length < 2 || !isHandle(profileHandle) || !isValidOptionalBirthDate(profileBirthDate)) {
-      setActionMessage("Fix the highlighted fields before saving.");
-      return;
-    }
-
-    const result = await updateAccount({ username: profileName, handle: profileHandle, birthDate: profileBirthDate });
-
-    if (!result.ok) {
-      setActionMessage(result.error === "handle_unavailable" ? "That handle is unavailable." : "Profile could not be saved.");
-      return;
-    }
-
-    applyAccountResult(result);
-    setActionMessage("");
-    bumpQuest("profile-saves");
-    bumpQuest("handle-set");
-    showToast({ variant: "success", title: "Profile saved" });
-  }
-
-  async function changePassword() {
-    setActionMessage("");
-    const result = await updateAccount(passwordForm);
-
-    if (!result.ok) {
-      setActionMessage("Password update failed. Check your current password and satisfy every requirement.");
-      return;
-    }
-
-    applyAccountResult(result);
-    setPasswordForm({ currentPassword: "", newPassword: "" });
-    setActionMessage("");
-    bumpQuest("password-changed");
-    showToast({ variant: "success", title: "Password updated" });
-  }
-
-  async function choosePlan(planId: Account["plan"]) {
-    if (!account) {
-      setLimitReached(false);
-      openAuth("signup", `Create an account to unlock ${plans.find((plan) => plan.id === planId)?.label ?? "a plan"} with credits.`);
-      return;
-    }
-
-    const planChanged = planId !== account.plan || billingCycle !== account.planBillingCycle;
-    const result = await updateAccount({ plan: planId, billingCycle });
-
-    if (result.ok) {
-      const upgradeCost = (plans.find((plan) => plan.id === planId)?.upgradeCost ?? 0) * (billingCycle === "yearly" ? 10 : 1);
-
-      if (planChanged && upgradeCost > 0) {
-        recordCredit(-upgradeCost, `Plan: ${plans.find((plan) => plan.id === planId)?.label ?? planId}`, "plan");
-      }
-
-      applyAccountResult(result);
-      setLimitReached(false);
-      setView("chat");
-      return;
-    }
-
-    if (result.error === "upgrade_credit_limit" && result.account) {
-      applyAccountResult(result);
-      setLimitReached(true);
-    }
-  }
-
-  async function claim(questId: "daily-check-in" | "open-first-booster" | "send-three-prompts") {
-    const result = await claimQuest(questId);
-
-    if (!result.ok) {
-      showToast({ variant: "warning", title: "Quest not ready yet", description: "Complete the action first, then claim." });
-      return;
-    }
-
-    applyAccountResult(result);
-    bumpQuest("dailies");
-    bumpQuest("credits-earned", result.rewardCredits);
-    recordCredit(result.rewardCredits, `Quest: ${result.quests.find((quest) => quest.id === questId)?.label ?? questId}`, "quest");
-    addSeasonXp(10);
-    creditGain(result.rewardCredits);
-    celebrate({ title: "Quest complete!", credits: result.rewardCredits, icon: "trophy" });
-  }
-
-  async function openCreditBooster() {
-    const result = await openBooster();
-
-    if (!result.ok) {
-      showToast({ variant: "warning", title: "No boosters available", description: "Complete quests to earn more." });
-      return;
-    }
-
-    applyAccountResult(result);
-    bumpQuest("boosters");
-    bumpQuest("credits-earned", result.rewardCredits);
-    recordCredit(result.rewardCredits, "Booster opening", "booster");
-    addSeasonXp(10);
-    creditGain(result.rewardCredits);
-    // The booster opens as a tappable puzzle — rarity climbs with fast taps,
-    // never below the pity floor (first ever / one per batch of 10 = Rare+).
-    openBoosterPuzzle([result.rewardCredits], nextBoosterFloor());
-  }
-
-  async function claimBirthday() {
-    const result = await claimBirthdayGift();
-
-    if (!result.ok) {
-      showToast({ variant: "warning", title: "Birthday gift not available today", description: "It unlocks once a year, on your birthday." });
-      return;
-    }
-
-    applyAccountResult(result);
-    bumpQuest("credits-earned", result.rewardCredits);
-    recordCredit(result.rewardCredits, "Birthday gift", "gift");
-    creditGain(result.rewardCredits);
-    celebrate({ title: "Happy birthday!", credits: result.rewardCredits, icon: "cake" });
-  }
-
-  async function handleDeleteAccount() {
-    const scope = account?.id;
-    setConfirmDeleteAccount(false);
-    const result = await deleteAccount().catch(() => null);
-
-    if (!result?.ok) {
-      showToast({ variant: "warning", title: "Deletion failed", description: "The server did not confirm — your account is untouched." });
-      return;
-    }
-
-    showToast({
-      variant: "success",
-      title: result.anonymized ? "Account anonymized" : "Account deleted",
-      description: result.anonymized ? "Your identity is now “Deleted User” — nothing links back to you." : "Everything about this account is gone.",
-    });
-    signOut();
-    switchDataScope("guest");
-
-    if (scope) {
-      // The parked bucket dies with the account — no ghost data on this device.
-      purgeScopeData(scope);
-    }
-
-    window.setTimeout(() => window.location.reload(), 900);
-  }
-
-  async function handleSignOut() {
-    setShowAccountMenu(false);
-    signOut();
-
-    // Back to the guest bucket — the account's data stays parked under its id.
-    if (switchDataScope("guest")) {
-      window.location.reload();
-      return;
-    }
-
-    const result = await loadGuestSession();
-
-    if (result.ok && result.guest) {
-      setGuest(result.guest);
-      setPlans(result.plans);
-    }
-
-    setView("chat");
-  }
-
-
-  function handleProfileDragOver(event: ReactDragEvent<HTMLElement>) {
-    if (!account || !Array.from(event.dataTransfer.items).some((item) => item.type.startsWith("image/"))) {
-      return;
-    }
-
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
-    setProfileDragActive(true);
-  }
-
-  function handleProfileDragLeave(event: ReactDragEvent<HTMLElement>) {
-    const nextTarget = event.relatedTarget;
-
-    if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
-      setProfileDragActive(false);
-    }
-  }
-
-  function handleProfileDrop(event: ReactDragEvent<HTMLElement>) {
-    if (!account) {
-      return;
-    }
-
-    event.preventDefault();
-    setProfileDragActive(false);
-    openAvatarImageFile(Array.from(event.dataTransfer.files).find((file) => file.type.startsWith("image/")));
-  }
-
-  async function copyAccountId() {
-    const value = account ? account.handle : guest?.id ?? "guest";
-    await navigator.clipboard?.writeText(value);
-    showToast({ variant: "success", title: "User ID copied", description: value });
-    setShowAccountMenu(false);
-  }
-
-  function openAccountView(nextView: typeof view) {
-    setView(nextView);
-    setShowAccountMenu(false);
-  }
-
-  /** Anchored above the account button; fixed so the icon rail can't clip it. */
-  function openAccountMenu(anchor: HTMLElement) {
-    const rect = anchor.getBoundingClientRect();
-    setAccountMenuPosition({ left: Math.max(8, rect.left), bottom: Math.max(8, window.innerHeight - rect.top + 8) });
-    setShowAccountMenu(true);
-  }
-
-  function clearAccountHoverTimer() {
-    if (accountHoverTimer.current) {
-      window.clearTimeout(accountHoverTimer.current);
-      accountHoverTimer.current = null;
-    }
-  }
-
-  function handleAccountHoverEnter() {
-    if (!window.matchMedia("(hover: hover)").matches) {
-      return;
-    }
-
-    clearAccountHoverTimer();
-
-    if (!showAccountMenu && accountButtonRef.current) {
-      openAccountMenu(accountButtonRef.current);
-    }
-  }
-
-  function handleAccountHoverLeave() {
-    if (!window.matchMedia("(hover: hover)").matches) {
-      return;
-    }
-
-    clearAccountHoverTimer();
-    accountHoverTimer.current = window.setTimeout(() => setShowAccountMenu(false), 220);
-  }
 
 
   if (isBooting) {
@@ -1184,88 +498,39 @@ export function ChatPage() {
             <span>Images & files land on your prompt</span>
           </div>
         ) : null}
-        <header className="topbar">
-          <button className="conversation-title" data-tooltip="Rename conversation" onClick={() => activeThread && startRename(activeThread)} type="button">
-            <h2>{title === "New conversation" ? prototype.chatTitle : title}</h2>
-            <ChevronDown size={16} />
-          </button>
-          <div className="topbar__actions">
-            {backendStatus !== "online" ? (
-              <span className="backend-pill" data-status={backendStatus}>
-                <CircleDashed size={14} />
-                API {backendStatus}
-              </span>
-            ) : null}
-            {view === "chat" && canToggleTemporary ? (
-              <IconButton
-                aria-pressed={!!activeThread?.temporary}
-                className="compact-button compact-button--icon"
-                data-active={activeThread?.temporary || undefined}
-                label={activeThread?.temporary ? "Temporary chat — deleted when you leave" : "Make this chat temporary"}
-                onClick={toggleTemporary}
-                type="button"
-              >
-                <Ghost size={15} />
-              </IconButton>
-            ) : null}
-            {account?.plan === "max-plus" ? (
-              <Button className="compact-button" data-tooltip="You're on the top plan — earn credits instead" onClick={() => setView("earn")} size="sm" type="button" variant="secondary">
-                <Gift size={15} />
-                Earn
-              </Button>
-            ) : (
-              <Button className="compact-button" data-tooltip="View plans" onClick={() => setView("plans")} size="sm" type="button" variant="secondary">
-                <Zap size={15} />
-                Upgrade
-              </Button>
-            )}
-            {view === "chat" && !conversationEmpty ? (
-              <Button aria-label="Clear chat" className="compact-button compact-button--icon" data-tooltip="Clear current conversation" onClick={handleClearChat} size="icon" type="button" variant="ghost">
-                <Trash2 size={15} />
-              </Button>
-            ) : null}
-            <IconButton
-              aria-pressed={inspectorCollapsed}
-              className="compact-button compact-button--icon inspector-toggle"
-              label={inspectorCollapsed ? "Show side panel" : "Hide side panel"}
-              onClick={() => setInspectorCollapsed((value) => !value)}
-              type="button"
-            >
-              {inspectorCollapsed ? <PanelRightOpen size={15} /> : <PanelRightClose size={15} />}
-            </IconButton>
-          </div>
-        </header>
+        <ChatTopbar
+          account={account}
+          activeThread={activeThread}
+          backendStatus={backendStatus}
+          canToggleTemporary={canToggleTemporary}
+          conversationEmpty={conversationEmpty}
+          handleClearChat={handleClearChat}
+          inspectorCollapsed={inspectorCollapsed}
+          setInspectorCollapsed={setInspectorCollapsed}
+          setView={setView}
+          startRename={startRename}
+          title={title}
+          toggleTemporary={toggleTemporary}
+          view={view}
+        />
 
         <div className="chat-scroll-area">
-          {view === "chat" && conversationEmpty ? <div className="chat-intro">
-            <div className="intro-mark">
-              <Sparkles size={28} />
-            </div>
-            <h3>What should feel better next?</h3>
-            <p>{prototype.description}</p>
-          </div> : null}
-
-          {view === "chat" && !conversationEmpty ? <div className="message-feed" onScroll={handleFeedScroll} ref={feedRef}>
-            <div className="message-feed__inner">
-            <AnimatePresence initial={false}>
-              {messages.map((message) => (
-                <ChatBubble
-                  busy={isProcessing}
-                  key={message.id}
-                  message={message}
-                  onBookmark={handleBookmark}
-                  onBranch={handleBranch}
-                  onBranchHere={handleBranchHere}
-                  onCancel={cancelGeneration}
-                  onEdit={handleEditPrompt}
-                  onReact={handleReact}
-                  onRetry={(target) => void retryMessage(target)}
-                  onVariant={(target, index) => setActiveVariant(target.id, index)}
-                />
-              ))}
-            </AnimatePresence>
-            </div>
-          </div> : null}
+          <MessageFeed
+            busy={composer.isProcessing}
+            conversationEmpty={conversationEmpty}
+            feedRef={feedRef}
+            handleFeedScroll={handleFeedScroll}
+            messages={messages}
+            onBookmark={handleBookmark}
+            onBranch={handleBranch}
+            onBranchHere={handleBranchHere}
+            onCancel={composer.cancelGeneration}
+            onEdit={composer.handleEditPrompt}
+            onReact={handleReact}
+            onRetry={(target) => void composer.retryMessage(target)}
+            onVariant={(target, index) => setActiveVariant(target.id, index)}
+            view={view}
+          />
 
           {view === "profile" ? (
             <ProfileSettings
@@ -1379,193 +644,26 @@ export function ChatPage() {
           ) : null}
         </div>
 
-        {view === "chat" ? <div
-          className="prompt-dock"
-          onClick={(event) => {
-            // Any button click in the composer zone hands focus back to the
-            // textarea once its own handlers are done.
-            if (event.target instanceof Element && event.target.closest("button")) {
-              window.requestAnimationFrame(() => promptRef.current?.focus());
-            }
-          }}
-        >
-          {showJumpToBottom && !conversationEmpty ? (
-            <button aria-label="Scroll to bottom" className="jump-to-bottom" onClick={jumpToBottom} type="button">
-              <ChevronDown size={16} />
-            </button>
-          ) : null}
-          {conversationEmpty ? (
-            <div className="quick-prompts">
-              {quickPrompts.slice(0, 4).map((quickPrompt) => (
-                <motion.button
-                  key={quickPrompt}
-                  onClick={() => setPrompt(quickPrompt)}
-                  type="button"
-                  whileHover={{ y: -1 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {quickPrompt.replace(/^@\w+\s/, "")}
-                </motion.button>
-              ))}
-            </div>
-          ) : null}
-          <form className="prompt-form" onSubmit={submitPrompt}>
-            {queuedPrompts.length > 0 ? (
-              <div aria-label="Queued messages" className="queue-strip">
-                {queuedPrompts.map((queued, index) => (
-                  <span className="queue-pill" key={`${index}-${queued.slice(0, 12)}`}>
-                    <ListPlus size={12} />
-                    {queued.slice(0, 34)}
-                    {queued.length > 34 ? "…" : ""}
-                    <button
-                      aria-label="Remove from queue"
-                      onClick={() => setQueuedPrompts((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-                      type="button"
-                    >
-                      <X size={11} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            ) : null}
-            {pendingAttachments.length > 0 ? (
-              <div className="attachment-strip" aria-label="Pending attachments">
-                {pendingAttachments.map((attachment) => (
-                  <div className="attachment-pill" key={attachment.id}>
-                    {attachment.type.startsWith("image/") ? <img alt="" src={attachment.dataUrl} /> : <FileText size={15} />}
-                    <span>{attachment.name}</span>
-                    <button aria-label={`Remove ${attachment.name}`} data-tooltip="Remove attachment" onClick={() => removePendingAttachment(attachment.id)} type="button">
-                      <X size={13} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            <textarea
-              aria-label="Prompt"
-              aria-describedby="composer-help composer-suggestions"
-              autoCapitalize="sentences"
-              autoComplete="on"
-              autoCorrect="on"
-              onChange={(event) => {
-                promptHistoryIndexRef.current = -1;
-                setPrompt(event.currentTarget.value);
-              }}
-              onKeyDown={handleComposerKeyDown}
-              onPaste={handleComposerPaste}
-              placeholder="Write a message..."
-              ref={promptRef}
-              rows={1}
-              spellCheck
-              value={prompt}
-            />
-            <div className="prompt-form__footer">
-              <input className="sr-only" multiple onChange={addFiles} ref={attachmentInputRef} type="file" />
-              {speech.supported ? (
-                <IconButton
-                  className="composer-tool composer-tool--mic"
-                  data-listening={speech.listening || undefined}
-                  label={speech.listening ? "Stop dictation" : "Dictate — voice to text"}
-                  onClick={speech.toggle}
-                  type="button"
-                >
-                  {speech.listening ? <MicOff size={18} /> : <Mic size={18} />}
-                </IconButton>
-              ) : null}
-              {canAttach ? (
-                <IconButton className="composer-tool" label="Attach files" onClick={() => attachmentInputRef.current?.click()} type="button">
-                  <Paperclip size={18} />
-                </IconButton>
-              ) : (
-                <IconButton
-                  className="composer-tool composer-tool--locked"
-                  label="Attachments are a Pro feature"
-                  tooltip="Unlock attachments with Pro"
-                  onClick={() =>
-                    showToast({
-                      variant: "info",
-                      title: "Attachments are a Pro feature",
-                      description: "Upgrade your plan to attach files and images.",
-                      actionLabel: "View plans",
-                      onAction: () => setView("plans"),
-                    })
-                  }
-                  type="button"
-                >
-                  <Lock size={16} />
-                </IconButton>
-              )}
-              <PersonaMenu />
-              <ModeMenu />
-              {editCandidate || editTargetId ? (
-                <IconButton
-                  className="composer-tool"
-                  data-active={!!editTargetId}
-                  label={editTargetId ? "Editing in place — Esc to cancel" : `Edit from last ${editCandidateDepth} message${editCandidateDepth > 1 ? "s" : ""}`}
-                  onClick={() => {
-                    if (editTargetId) {
-                      setEditTargetId(null);
-                      return;
-                    }
-
-                    if (editCandidate) {
-                      setEditTargetId(editCandidate.id);
-                    }
-                  }}
-                  type="button"
-                >
-                  <Pencil size={17} />
-                </IconButton>
-              ) : null}
-              {composerSuggestions.length > 0 ? (
-                <div className="composer-suggestions" id="composer-suggestions" role="listbox" aria-label="Autocomplete suggestions">
-                  {composerSuggestions.map((word, index) => (
-                    <button
-                      aria-selected={index === suggestionIndex}
-                      data-active={index === suggestionIndex}
-                      key={word}
-                      onClick={() => completePromptWord(word)}
-                      role="option"
-                      type="button"
-                    >
-                      {word}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <span className="composer-hint" data-editing={!!editTargetId || undefined} id="composer-help">
-                  {editTargetId ? "Editing an earlier prompt — Enter regenerates from there · Esc cancels" : "Enter to send"}
-                </span>
-              )}
-              <div className="prompt-form__send">
-                {canQueue ? (
-                  <IconButton
-                    className="composer-tool"
-                    disabled={!trimmedPrompt}
-                    label={`Add to queue${queuedPrompts.length > 0 ? ` (${queuedPrompts.length} waiting)` : ""}`}
-                    onClick={handleQueue}
-                    type="button"
-                  >
-                    <ListPlus size={18} />
-                  </IconButton>
-                ) : null}
-                {isProcessing ? (
-                  <Button onClick={skipProcessing} size="sm" type="button" variant="secondary">
-                    Skip
-                  </Button>
-                ) : null}
-                <Button aria-label="Send" className="send-button" disabled={!canSend} loading={isProcessing} size="icon" type="submit">
-                  <Send size={17} />
-                </Button>
-              </div>
-            </div>
-          </form>
-          {activeCredits < PROMPT_COST ? (
-            <motion.p className="credit-warning" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              Credit limit reached. {account ? "Unlock Pro, Max, or Max+ with credits to continue." : "Create an account to unlock more credits."}
-            </motion.p>
-          ) : null}
-        </div> : null}
+        {view === "chat" ? (
+          <Composer
+            account={account}
+            activeCredits={activeCredits}
+            addFiles={addFiles}
+            attachmentInputRef={attachmentInputRef}
+            canAttach={canAttach}
+            canQueue={canQueue}
+            composer={composer}
+            conversationEmpty={conversationEmpty}
+            handleComposerPaste={handleComposerPaste}
+            jumpToBottom={jumpToBottom}
+            pendingAttachments={pendingAttachments}
+            promptRef={promptRef}
+            removePendingAttachment={removePendingAttachment}
+            setView={setView}
+            showJumpToBottom={showJumpToBottom}
+            speech={speech}
+          />
+        ) : null}
       </section>
 
       <Inspector
