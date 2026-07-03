@@ -3,8 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Archive,
   BarChart3,
-  Bookmark,
-  Bot,
   CalendarDays,
   Check,
   ChevronDown,
@@ -12,12 +10,10 @@ import {
   CreditCard,
   FileText,
   Ghost,
-  Crown,
   Gift,
   GripVertical,
   ImagePlus,
   KeyRound,
-  Medal,
   Mic,
   MicOff,
   Lock,
@@ -26,7 +22,6 @@ import {
   LogIn,
   LogOut,
   MessageSquarePlus,
-  MessagesSquare,
   MoreHorizontal,
   PanelRightClose,
   PanelRightOpen,
@@ -37,10 +32,8 @@ import {
   Save,
   Send,
   Settings2,
-  ShoppingBag,
   Sparkles,
   Trash2,
-  Trophy,
   UserRound,
   X,
   Zap,
@@ -78,7 +71,6 @@ import { isEmail, isHandle, isStrongPassword, isValidOptionalBirthDate } from ".
 import { PasswordChecklist } from "../auth/PasswordChecklist";
 import { AccountAvatar } from "../account/AccountAvatar";
 import { useShellStore } from "../shell/shell.store";
-import type { ShellView } from "../shell/shell.store";
 import { SettingsPanel } from "../settings/SettingsPanel";
 import { ActivityPanel } from "../activity/ActivityPanel";
 import { computeActivityStats } from "../activity/activity.stats";
@@ -98,6 +90,8 @@ import { Inspector } from "./Inspector";
 import { GuestPanel } from "../account/GuestPanel";
 import { ModeMenu } from "../themes/ModeMenu";
 import { AuthModal } from "../auth/AuthModal";
+import { ThumbBar } from "./ThumbBar";
+import { navItems } from "./navItems";
 import { AvatarModal } from "../onboarding/AvatarModal";
 import { cropAvatar } from "../../lib/avatar";
 import { isoNow } from "../../lib/date";
@@ -143,18 +137,6 @@ const composerDictionary = [
 // railHidden pages are informative/optional — expanded sidebar only.
 // Plans left the nav on purpose: it lives in Profile › Billing and behind
 // the Upgrade actions.
-const navItems: { view: ShellView; icon: typeof Bot; label: string; railHidden?: boolean; thumbHidden?: boolean }[] = [
-  { view: "chat", icon: Bot, label: "Chat" },
-  { view: "quests", icon: Trophy, label: "Quests" },
-  { view: "shop", icon: ShoppingBag, label: "Shop" },
-  { view: "season", icon: Crown, label: "Pass" },
-  { view: "ranking", icon: Medal, label: "Ranking", thumbHidden: true },
-  { view: "library", icon: Bookmark, label: "Library", thumbHidden: true },
-  { view: "activity", icon: CalendarDays, label: "Activity", thumbHidden: true },
-  { view: "earn", icon: Gift, label: "Earn", railHidden: true },
-  { view: "gallery", icon: ImagePlus, label: "Gallery", railHidden: true },
-];
-
 export function ChatPage() {
   const [prompt, setPrompt] = useState("");
   /** When set, submitting EDITS that earlier prompt in place (regrows the branch). */
@@ -2683,69 +2665,19 @@ export function ChatPage() {
       />
 
       {/* Phone navigation: a thumb bar replaces the sidebar entirely. */}
-      <nav aria-label="Bottom navigation" className="thumb-bar">
-        <button
-          aria-label="Conversations"
-          className="thumb-bar__item"
-          data-active={mobileNavOpen}
-          onClick={() => setMobileNavOpen(true)}
-          type="button"
-        >
-          <MessagesSquare size={19} />
-          <span>Chats</span>
-        </button>
-        {navItems
-          .filter((item) => !item.railHidden && !item.thumbHidden)
-          .map((item) => (
-            <button
-              className="thumb-bar__item"
-              data-active={view === item.view}
-              key={item.view}
-              onClick={() => {
-                setView(item.view);
-                bumpQuest("page-visits");
-              }}
-              type="button"
-            >
-              <item.icon size={19} />
-              <span>{item.label}</span>
-            </button>
-          ))}
-        <button aria-label="New session" className="thumb-bar__item" onClick={newThread} type="button">
-          <MessageSquarePlus size={19} />
-          <span>New</span>
-        </button>
-        <button
-          aria-label={account ? "Account" : "Sign up or log in"}
-          className="thumb-bar__item"
-          onClick={() => {
-            // Guests go straight to auth — no detour through the menu.
-            if (!account) {
-              openAuth("signup", "Create an account to keep your credits, unlocks, and quests.");
-              return;
-            }
-
-            if (showAccountMenu) {
-              setShowAccountMenu(false);
-              setMobileNavOpen(false);
-              return;
-            }
-
-            // The popover lives in the sidebar: open the drawer first, then
-            // anchor the menu to the (now visible) account row inside it.
-            setMobileNavOpen(true);
-            requestAnimationFrame(() => {
-              if (accountButtonRef.current) {
-                openAccountMenu(accountButtonRef.current);
-              }
-            });
-          }}
-          type="button"
-        >
-          <AccountAvatar account={account} />
-          <span>{account ? "You" : "Sign in"}</span>
-        </button>
-      </nav>
+      <ThumbBar
+        account={account}
+        accountButtonRef={accountButtonRef}
+        mobileNavOpen={mobileNavOpen}
+        newThread={newThread}
+        openAccountMenu={openAccountMenu}
+        openAuth={openAuth}
+        setMobileNavOpen={setMobileNavOpen}
+        setShowAccountMenu={setShowAccountMenu}
+        setView={setView}
+        showAccountMenu={showAccountMenu}
+        view={view}
+      />
 
       {showAuthModal ? (
         <AuthModal
