@@ -1,5 +1,6 @@
 import { BookmarkCheck, BookmarkX, ThumbsUp } from "lucide-react";
 import { useChatStore } from "../chat/chat.store";
+import { EmptyState } from "../../components/EmptyState/EmptyState";
 import "./LibraryPanel.css";
 
 export type LibraryItem = {
@@ -113,11 +114,7 @@ export function LibraryPanel({ onOpen, onRemoveBookmark }: LibraryPanelProps) {
           </header>
 
           {section.items.length === 0 ? (
-            <article className="empty-state">
-              <section.icon size={20} />
-              <strong>Nothing here yet</strong>
-              <span>{section.hint}</span>
-            </article>
+            <EmptyState hint={section.hint} icon={<section.icon size={20} />} title="Nothing here yet" />
           ) : (
             <div className="library-grid">
               {section.items.map((item) => (

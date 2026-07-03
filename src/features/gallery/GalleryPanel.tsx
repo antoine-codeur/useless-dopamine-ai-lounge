@@ -1,5 +1,6 @@
 import { FileText, Paperclip } from "lucide-react";
 import { useChatStore } from "../chat/chat.store";
+import { EmptyState } from "../../components/EmptyState/EmptyState";
 
 /**
  * Grid of every file/image attached across all conversations. Attachments live
@@ -20,11 +21,11 @@ export function GalleryPanel() {
       <p className="muted">Files and images attached to messages are stored locally with their conversations and shown here.</p>
       <div className="gallery-grid">
         {items.length === 0 ? (
-          <article className="empty-state">
-            <Paperclip size={22} />
-            <strong>No files yet</strong>
-            <span>Attach images or files from the composer to populate the gallery.</span>
-          </article>
+          <EmptyState
+            hint="Attach images or files from the composer to populate the gallery."
+            icon={<Paperclip size={22} />}
+            title="No files yet"
+          />
         ) : (
           items.map((item) => (
             <a className="gallery-item" href={item.dataUrl} download={item.name} key={item.id}>
