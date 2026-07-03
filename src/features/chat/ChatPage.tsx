@@ -26,7 +26,7 @@ import { ChatBubble } from "../../components/ChatBubble/ChatBubble";
 import { threadHasConversationContent, useChatStore } from "./chat.store";
 import { getProcessingPlan, PROMPT_COST, promptCostFor, quickPrompts, visibleStepsFor } from "./chat.logic";
 import { randomDelay } from "../../lib/random";
-import type { Account, Attachment, ChatThread, GuestSession, Message } from "../../types";
+import type { Account, Attachment, GuestSession, Message } from "../../types";
 import { prototype } from "../../app/prototype";
 import {
   claimBirthdayGift,
@@ -76,6 +76,7 @@ import { ProfileSettings } from "./ProfileSettings";
 import { AccountMenu } from "./AccountMenu";
 import { Sidebar } from "./Sidebar";
 import { useAvatarEditor } from "./useAvatarEditor";
+import { useThreadMenu } from "./useThreadMenu";
 import { AvatarModal } from "../onboarding/AvatarModal";
 import { isoNow } from "../../lib/date";
 import { FloatingTooltip } from "../../components/FloatingTooltip/FloatingTooltip";
@@ -143,10 +144,6 @@ export function ChatPage() {
   const { avatarEditor, avatarScale, setAvatarScale, openAvatarImageFile, openAvatarFile, closeAvatarEditor, saveAvatar } = useAvatarEditor();
   const [suggestionIndex, setSuggestionIndex] = useState(0);
   const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
-  const [threadMenuId, setThreadMenuId] = useState<string | null>(null);
-  const [threadMenuPosition, setThreadMenuPosition] = useState<{ left: number; top: number; up: boolean } | null>(null);
-  const [renameThreadId, setRenameThreadId] = useState<string | null>(null);
-  const [renameValue, setRenameValue] = useState("");
   const [showArchivedThreads, setShowArchivedThreads] = useState(false);
   const [billingCycle, setBillingCycle] = useState<Account["planBillingCycle"]>("monthly");
   const [profileDragActive, setProfileDragActive] = useState(false);
@@ -165,6 +162,20 @@ export function ChatPage() {
   const accountButtonRef = useRef<HTMLButtonElement | null>(null);
   const accountHoverTimer = useRef<number | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem("uda:sidebar-collapsed") === "true");
+  const {
+    threadMenuId,
+    setThreadMenuId,
+    threadMenuPosition,
+    setThreadMenuPosition,
+    renameThreadId,
+    setRenameThreadId,
+    renameValue,
+    setRenameValue,
+    threadMenuRef,
+    startRename,
+    commitRename,
+    handleDeleteThread,
+  } = useThreadMenu(() => setSidebarCollapsed(false));
   const [inspectorCollapsed, setInspectorCollapsed] = useState(() => localStorage.getItem("uda:inspector-collapsed") === "true");
   const [sidebarWidth, setSidebarWidth] = useState(() => Number(localStorage.getItem("uda:sidebar-width") ?? 280));
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
@@ -189,9 +200,7 @@ export function ChatPage() {
   const createThread = useChatStore((state) => state.createThread);
   const setActiveThread = useChatStore((state) => state.setActiveThread);
   const deleteThread = useChatStore((state) => state.deleteThread);
-  const insertThread = useChatStore((state) => state.insertThread);
   const restoreThread = useChatStore((state) => state.restoreThread);
-  const renameThread = useChatStore((state) => state.renameThread);
   const setThreadTemporary = useChatStore((state) => state.setThreadTemporary);
   const account = useAccountStore((state) => state.account);
   const plans = useAccountStore((state) => state.plans);
@@ -212,7 +221,6 @@ export function ChatPage() {
       and a cancel refunds whatever never ran (keyed by AI message id). */
   const billingRef = useRef<Map<string, { userMessageId: string; total: number; done: number }>>(new Map());
   const accountMenuRef = useDismiss<HTMLDivElement>(showAccountMenu, () => setShowAccountMenu(false));
-  const threadMenuRef = useDismiss<HTMLDivElement>(threadMenuId !== null, () => setThreadMenuId(null));
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
   const profileAvatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -753,33 +761,6 @@ export function ChatPage() {
     });
   }
 
-  function handleDeleteThread(thread: ChatThread) {
-    setThreadMenuId(null);
-    deleteThread(thread.id);
-    showToast({
-      title: "Conversation deleted",
-      description: thread.title,
-      variant: "info",
-      actionLabel: "Undo",
-      onAction: () => insertThread(thread),
-    });
-  }
-
-  function startRename(thread: ChatThread) {
-    setSidebarCollapsed(false);
-    setRenameThreadId(thread.id);
-    setRenameValue(thread.title);
-    setThreadMenuId(null);
-  }
-
-  function commitRename() {
-    if (renameThreadId) {
-      renameThread(renameThreadId, renameValue);
-    }
-
-    setRenameThreadId(null);
-    setRenameValue("");
-  }
 
   function fileToAttachment(file: File): Promise<Attachment> {
     return new Promise((resolve, reject) => {
