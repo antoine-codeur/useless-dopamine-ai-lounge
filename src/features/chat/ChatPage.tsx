@@ -1,4 +1,4 @@
-import { CSSProperties, DragEvent as ReactDragEvent, FocusEvent as ReactFocusEvent, FormEvent, KeyboardEvent, PointerEvent as ReactPointerEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, DragEvent as ReactDragEvent, FocusEvent as ReactFocusEvent, FormEvent, KeyboardEvent, PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronDown,
@@ -76,6 +76,7 @@ import { useAvatarEditor } from "./useAvatarEditor";
 import { useThreadMenu } from "./useThreadMenu";
 import { useAttachments } from "./useAttachments";
 import { useAuthFlow } from "./useAuthFlow";
+import { useFeedScroll } from "./useFeedScroll";
 import { AvatarModal } from "../onboarding/AvatarModal";
 import { isoNow } from "../../lib/date";
 import { FloatingTooltip } from "../../components/FloatingTooltip/FloatingTooltip";
@@ -216,9 +217,7 @@ export function ChatPage() {
   const setPlans = useAccountStore((state) => state.setPlans);
   const signOut = useAccountStore((state) => state.signOut);
   const timeoutIds = useRef<number[]>([]);
-  const feedRef = useRef<HTMLDivElement | null>(null);
   /** Auto-scroll only sticks while the reader is already near the bottom. */
-  const stickToBottomRef = useRef(true);
   /** ArrowUp/Down position while walking the prompt history (-1 = not walking). */
   const promptHistoryIndexRef = useRef(-1);
   /** Tracks where we were, to delete temporary chats on leave. */
@@ -235,6 +234,7 @@ export function ChatPage() {
   const onboardingAvatarInputRef = useRef<HTMLInputElement | null>(null);
   const activeThread = threads.find((thread) => thread.id === activeThreadId) ?? threads[0];
   const messages = activeThread?.messages ?? [];
+  const { feedRef, stickToBottomRef, showJumpToBottom, handleFeedScroll, jumpToBottom } = useFeedScroll(messages, activeThreadId, view);
   const title = activeThread?.title ?? "New conversation";
   const conversationEmpty = messages.every((message) => message.author === "system");
   /** Attachments are a paid capability: locked for guests and the Free plan. */
@@ -325,35 +325,6 @@ export function ChatPage() {
 
     return () => controller.abort();
   }, []);
-
-  useEffect(() => {
-    const feed = feedRef.current;
-
-    if (feed && stickToBottomRef.current) {
-      feed.scrollTo({ top: feed.scrollHeight, behavior: "smooth" });
-    }
-  }, [messages]);
-
-  useLayoutEffect(() => {
-    // Fresh mount / thread switch: land at the BOTTOM instantly (even after a
-    // hard refresh). Late-loading images push the height, so re-snap twice.
-    const snap = () => {
-      const feed = feedRef.current;
-
-      if (feed && stickToBottomRef.current) {
-        feed.scrollTop = feed.scrollHeight;
-      }
-    };
-
-    stickToBottomRef.current = true;
-    snap();
-    const first = window.setTimeout(snap, 250);
-    const second = window.setTimeout(snap, 900);
-    return () => {
-      window.clearTimeout(first);
-      window.clearTimeout(second);
-    };
-  }, [activeThreadId, view]);
 
   useEffect(() => {
     if (!promptRef.current) {
@@ -596,7 +567,6 @@ export function ChatPage() {
   }, [isResizingSidebar]);
 
   const activePersonaId = usePersonaStore((state) => state.activePersonaId);
-  const [showJumpToBottom, setShowJumpToBottom] = useState(false);
   const activeCredits = account?.creditsRemaining ?? guest?.creditsRemaining ?? 0;
 
   useEffect(() => {
@@ -728,25 +698,6 @@ export function ChatPage() {
     bumpQuest("sessions");
   }
 
-  function handleFeedScroll() {
-    const feed = feedRef.current;
-
-    if (feed) {
-      const nearBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 120;
-      stickToBottomRef.current = nearBottom;
-      setShowJumpToBottom(!nearBottom);
-    }
-  }
-
-  function jumpToBottom() {
-    const feed = feedRef.current;
-
-    if (feed) {
-      stickToBottomRef.current = true;
-      setShowJumpToBottom(false);
-      feed.scrollTo({ top: feed.scrollHeight, behavior: "smooth" });
-    }
-  }
 
   function handleClearChat() {
     if (!activeThread) {
