@@ -57,7 +57,7 @@ import {
   claimQuest,
   createAccount,
   deleteAccount,
-  getStoredAccountId,
+  getAuthToken,
   loadGuestSession,
   loadSession,
   login,
@@ -65,7 +65,7 @@ import {
   refundSteps,
   requestAgentResponse,
   requestGuestAgentResponse,
-  storeAccountId,
+  storeAuthToken,
   updateAccount,
 } from "../../lib/api";
 import { recordCredit } from "../stats/ledger.store";
@@ -289,7 +289,7 @@ export function ChatPage() {
     .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updatedAt.localeCompare(a.updatedAt));
 
   useEffect(() => {
-    if (!getStoredAccountId()) {
+    if (!getAuthToken()) {
       // Guest identity: make sure the guest data bucket is the live one.
       if (switchDataScope("guest")) {
         window.location.reload();
@@ -698,6 +698,12 @@ export function ChatPage() {
   }
 
   function showTooltipFor(element: HTMLElement) {
+    // Touch fires pointerover on tap; without this guard the tooltip flashes on
+    // every tap. Hover-capable pointers still get it; labels have aria fallbacks.
+    if (!window.matchMedia("(hover: hover)").matches) {
+      return;
+    }
+
     const label = element.dataset.tooltip;
 
     if (!label) {
@@ -1344,9 +1350,9 @@ export function ChatPage() {
       return;
     }
 
-    // Persist identity BEFORE any reload, otherwise the post-reload boot reads
-    // no stored account id and drops the user back into a guest session.
-    storeAccountId(result.account.id);
+    // Persist the session token BEFORE any reload, otherwise the post-reload
+    // boot has no credential and drops the user back into a guest session.
+    storeAuthToken(result.token);
 
     // Signup carries the guest progress into the new account's bucket.
     if (switchDataScope(result.account.id, true)) {
@@ -1368,9 +1374,9 @@ export function ChatPage() {
       return;
     }
 
-    // Persist identity BEFORE any reload, otherwise the post-reload boot reads
-    // no stored account id and drops the user back into a guest session.
-    storeAccountId(result.account.id);
+    // Persist the session token BEFORE any reload, otherwise the post-reload
+    // boot has no credential and drops the user back into a guest session.
+    storeAuthToken(result.token);
 
     // Login restores THAT account's own bucket (fresh if first time here).
     if (switchDataScope(result.account.id)) {
@@ -1963,6 +1969,9 @@ export function ChatPage() {
               key={item.view}
               onClick={() => {
                 setView(item.view);
+                // Close the phone drawer even when re-selecting the active
+                // section (the [view] effect only fires on an actual change).
+                setMobileNavOpen(false);
                 bumpQuest("page-visits");
               }}
               type="button"
@@ -2006,7 +2015,7 @@ export function ChatPage() {
                     autoFocus
                   />
                 ) : (
-                  <button className="session-item" onClick={() => { setActiveThread(thread.id); setView("chat"); }} type="button">
+                  <button className="session-item" onClick={() => { setActiveThread(thread.id); setView("chat"); setMobileNavOpen(false); }} type="button">
                     {thread.temporary ? <Ghost size={13} /> : thread.pinned ? <Pin size={13} /> : thread.archived ? <Archive size={13} /> : null}
                     <span>{thread.title}</span>
                   </button>
