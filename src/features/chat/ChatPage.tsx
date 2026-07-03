@@ -3,8 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Archive,
   BarChart3,
-  CalendarDays,
-  Check,
   ChevronDown,
   CircleDashed,
   CreditCard,
@@ -91,6 +89,7 @@ import { GuestPanel } from "../account/GuestPanel";
 import { ModeMenu } from "../themes/ModeMenu";
 import { AuthModal } from "../auth/AuthModal";
 import { ThumbBar } from "./ThumbBar";
+import { OnboardingScreen } from "./OnboardingScreen";
 import { navItems } from "./navItems";
 import { AvatarModal } from "../onboarding/AvatarModal";
 import { cropAvatar } from "../../lib/avatar";
@@ -107,7 +106,7 @@ import { nextBoosterFloor } from "../shop/shop.store";
 import { useDismiss } from "../../lib/useDismiss";
 import "./ChatPage.css";
 
-type AvatarEditorState = {
+export type AvatarEditorState = {
   src: string;
   nextStep?: Account["onboardingStep"];
 };
@@ -1781,128 +1780,29 @@ export function ChatPage() {
 
   if (account && account.onboardingStep !== "complete") {
     return (
-      <main className="auth-screen">
-        <section className="auth-card onboarding-card">
-          <div className="step-track" aria-label="Account setup progress">
-            {["profile", "avatar", "birthday"].map((step) => (
-              <span data-active={account.onboardingStep === step} data-done={["avatar", "birthday", "complete"].indexOf(account.onboardingStep) > ["avatar", "birthday", "complete"].indexOf(step)} key={step} />
-            ))}
-          </div>
-
-          {account.onboardingStep === "profile" ? (
-            <form className="onboarding-step" onSubmit={saveOnboardingProfile}>
-              <div className="intro-mark">
-                <UserRound size={28} />
-              </div>
-              <h1>Set up your profile</h1>
-              <p>Pick the name and handle people will see inside the lounge. You can change both later.</p>
-              <label htmlFor="onboarding-display-name">
-                Display name
-                <input
-                  aria-describedby="onboarding-display-name-hint"
-                  aria-invalid={profileNameInvalid}
-                  autoFocus
-                  id="onboarding-display-name"
-                  minLength={2}
-                  required
-                  value={profileName}
-                  onChange={(event) => setProfileName(event.currentTarget.value)}
-                />
-              </label>
-              <p className={profileNameInvalid ? "field-error" : "field-hint"} id="onboarding-display-name-hint">
-                {profileNameInvalid ? "Use at least 2 characters." : "At least 2 characters."}
-              </p>
-              <label htmlFor="onboarding-handle">
-                Handle
-                <input
-                  aria-describedby="onboarding-handle-hint"
-                  aria-invalid={profileHandleInvalid}
-                  id="onboarding-handle"
-                  pattern="[a-z0-9_]{2,28}"
-                  required
-                  value={profileHandle}
-                  onChange={(event) => setProfileHandle(event.currentTarget.value.toLowerCase())}
-                />
-              </label>
-              <p className={profileHandleInvalid ? "field-error" : "field-hint"} id="onboarding-handle-hint">
-                {profileHandleInvalid ? "Use 2-28 lowercase letters, numbers, or underscores." : "Lowercase letters, numbers, and underscores only."}
-              </p>
-              {actionMessage ? <p className="form-error">{actionMessage}</p> : null}
-              <Button disabled={profileName.trim().length < 2 || !isHandle(profileHandle)} type="submit">
-                <Check size={17} />
-                Save and continue
-              </Button>
-            </form>
-          ) : null}
-
-          {account.onboardingStep === "avatar" ? (
-            <div className="onboarding-step">
-              <div className="onboarding-avatar">
-                <AccountAvatar account={account} size="lg" />
-              </div>
-              <h1>Add a profile picture</h1>
-              <p>Optional. Upload an image, resize it visually, then save a compressed avatar to your account.</p>
-              <input
-                accept="image/*"
-                className="sr-only"
-                onChange={(event) => openAvatarFile(event, "birthday")}
-                ref={onboardingAvatarInputRef}
-                type="file"
-              />
-              <Button onClick={() => onboardingAvatarInputRef.current?.click()} type="button">
-                <ImagePlus size={17} />
-                Choose image
-              </Button>
-              <Button onClick={() => skipOnboardingStep("birthday")} type="button" variant="ghost">
-                Skip for now
-              </Button>
-            </div>
-          ) : null}
-
-          {account.onboardingStep === "birthday" ? (
-            <form className="onboarding-step" onSubmit={finishBirthdayStep}>
-              <div className="intro-mark">
-                <CalendarDays size={28} />
-              </div>
-              <h1>Birthday reward</h1>
-              <p>Optional. Your date is used only to unlock an annual credit gift on your birthday.</p>
-              <label htmlFor="onboarding-birth-date">
-                Date of birth
-                <input
-                  aria-describedby="onboarding-birth-date-hint"
-                  aria-invalid={profileBirthDateInvalid}
-                  id="onboarding-birth-date"
-                  max={new Date().toISOString().slice(0, 10)}
-                  type="date"
-                  value={profileBirthDate}
-                  onChange={(event) => setProfileBirthDate(event.currentTarget.value)}
-                />
-              </label>
-              <p className={profileBirthDateInvalid ? "field-error" : "field-hint"} id="onboarding-birth-date-hint">
-                {profileBirthDateInvalid ? "Use a valid past date." : "Optional. Used only for annual birthday credits."}
-              </p>
-              {actionMessage ? <p className="form-error">{actionMessage}</p> : null}
-              <Button type="submit">
-                <Gift size={17} />
-                Finish setup
-              </Button>
-              <Button onClick={() => skipOnboardingStep("complete")} type="button" variant="ghost">
-                Skip
-              </Button>
-            </form>
-          ) : null}
-        </section>
-
-        {avatarEditor ? (
-          <AvatarModal
-            scale={avatarScale}
-            src={avatarEditor.src}
-            onCancel={closeAvatarEditor}
-            onScaleChange={setAvatarScale}
-            onSave={saveAvatar}
-          />
-        ) : null}
-      </main>
+      <OnboardingScreen
+        account={account}
+        actionMessage={actionMessage}
+        avatarEditor={avatarEditor}
+        avatarScale={avatarScale}
+        closeAvatarEditor={closeAvatarEditor}
+        finishBirthdayStep={finishBirthdayStep}
+        onboardingAvatarInputRef={onboardingAvatarInputRef}
+        openAvatarFile={openAvatarFile}
+        profileBirthDate={profileBirthDate}
+        profileBirthDateInvalid={profileBirthDateInvalid}
+        profileHandle={profileHandle}
+        profileHandleInvalid={profileHandleInvalid}
+        profileName={profileName}
+        profileNameInvalid={profileNameInvalid}
+        saveAvatar={saveAvatar}
+        saveOnboardingProfile={saveOnboardingProfile}
+        setAvatarScale={setAvatarScale}
+        setProfileBirthDate={setProfileBirthDate}
+        setProfileHandle={setProfileHandle}
+        setProfileName={setProfileName}
+        skipOnboardingStep={skipOnboardingStep}
+      />
     );
   }
 
