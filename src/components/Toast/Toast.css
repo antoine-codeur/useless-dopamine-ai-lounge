@@ -95,3 +95,12 @@
   background: var(--color-surfaceAlt);
   color: var(--color-text);
 }
+
+/* Touch: grow the close hit area to a comfortable target (desktop unchanged). */
+@media (hover: none) {
+  .toast__close {
+    min-height: 2.5rem;
+    min-width: 2.5rem;
+    justify-content: center;
+  }
+}

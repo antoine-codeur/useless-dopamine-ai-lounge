@@ -99,3 +99,10 @@
   background: var(--color-surfaceAlt);
   color: var(--color-danger);
 }
+
+@media (hover: none) {
+  .library-card__remove {
+    height: 2.5rem;
+    width: 2.5rem;
+  }
+}

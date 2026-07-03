@@ -166,3 +166,9 @@
     display: none;
   }
 }
+
+@media (hover: none) {
+  .ranking-periods button {
+    min-height: 2.5rem;
+  }
+}
